@@ -1,51 +1,68 @@
 <!doctype html>
 <html lang="pt">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#241326">
+<meta name="description" content="Calculadora de volume e quantidade de massa para formas de bolos.">
 <title>Calculadora de Massas | Confeitaria Pro</title>
 <style>
-:root{--ink:#28172b;--plum:#3a2140;--plum2:#593b61;--lilac:#d9c3e3;--cream:#fbf8f4;--paper:#fff;--muted:#766d78;--line:#e9e1e9;--accent:#8b5a9b;--gold:#c69b58;--shadow:0 18px 55px #28172b12}
-*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-header{background:linear-gradient(120deg,#241326,#43264b);color:white;padding:30px 20px 42px} .head{max-width:980px;margin:auto}.eyebrow{font-size:11px;letter-spacing:.19em;text-transform:uppercase;color:#ddc9e4;font-weight:700}.brand{font-size:clamp(25px,5vw,37px);font-weight:800;letter-spacing:-.04em;margin:8px 0 4px}.brand span{color:#d9bde4}.sub{color:#e2d8e5;margin:0;max-width:590px}
-main{max-width:980px;margin:-20px auto 50px;padding:0 16px}.layout{display:grid;grid-template-columns:1.08fr .92fr;gap:18px;align-items:start}.panel{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--shadow)}h2{font-size:18px;margin:0 0 5px;letter-spacing:-.02em}.hint{color:var(--muted);font-size:13px;margin:0 0 22px}.fieldgrid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.field{display:flex;flex-direction:column;gap:7px}.field.full{grid-column:1/-1}label{font-size:12px;font-weight:750;color:#514454}.field small{font-size:11px;color:var(--muted)}input,select{width:100%;border:1px solid #dcd2df;border-radius:11px;background:#fff;padding:13px 12px;color:var(--ink);font:inherit;outline:none;min-height:48px}input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px #8b5a9b20}.unit{position:relative}.unit input{padding-right:50px}.unit b{position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted)}.actions{display:flex;gap:10px;margin-top:22px}.btn{border:0;border-radius:11px;padding:13px 18px;font:700 13px inherit;cursor:pointer}.primary{background:var(--plum);color:#fff;flex:1}.secondary{background:#f1ebf3;color:var(--plum)}.result{background:linear-gradient(150deg,#34203b,#56365f);color:#fff;border-radius:17px;padding:22px;margin-top:16px}.result .eyebrow{color:#ddc6e6}.amount{font-size:clamp(35px,7vw,50px);font-weight:850;letter-spacing:-.05em;margin:6px 0 0;line-height:1.1}.amount span{font-size:17px;font-weight:600;letter-spacing:0;color:#e6d8e9}.resultnote{font-size:12px;color:#e4d8e7;margin:8px 0 0}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.stat{border:1px solid #ffffff27;background:#ffffff0c;border-radius:12px;padding:12px}.stat small{display:block;color:#e0d2e4;font-size:11px}.stat strong{display:block;font-size:17px;margin-top:3px}.notice{margin-top:15px;background:#f8f3e9;border:1px solid #eee1c9;border-radius:12px;padding:13px;color:#65543a;font-size:12px}.tip{margin-top:17px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:12px}.tip strong{color:var(--ink)}footer{text-align:center;color:#938895;font-size:11px;padding:8px 16px 30px}
-@media(max-width:720px){header{padding:25px 18px 38px}.layout{grid-template-columns:1fr}.panel{padding:20px}.fieldgrid{gap:12px}main{padding:0 12px}.result{margin-top:4px}}
-@media(max-width:380px){.fieldgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.actions{flex-direction:column}}
-</style>
-</head>
+:root{--ink:#25162b;--plum:#321b39;--plum2:#52305b;--lilac:#dfcbe7;--cream:#faf7f3;--paper:#fff;--muted:#746b78;--line:#e8e0e9;--accent:#9564a4;--gold:#c69b58;--shadow:0 18px 48px #28172b12}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:linear-gradient(125deg,#211226,#503058);color:white;padding:32px 20px 48px}.head,main{max-width:1020px;margin:auto}.eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#e2cce9;font-weight:800}.brand{font-size:clamp(28px,5vw,40px);font-weight:850;letter-spacing:-.045em;margin:7px 0}.brand span{color:#dfc5e8}.sub{margin:0;color:#e7dce9;max-width:650px;font-size:14px}
+main{padding:0 16px;margin-top:-23px;margin-bottom:48px}.layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}.panel{background:var(--paper);border:1px solid var(--line);border-radius:19px;padding:23px;box-shadow:var(--shadow)}.section-title{font-size:18px;font-weight:800;letter-spacing:-.025em;margin:0 0 3px}.hint{color:var(--muted);font-size:12px;margin:0 0 19px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:flex;flex-direction:column;gap:6px;min-width:0}.field.full{grid-column:1/-1}label{font-size:11px;font-weight:800;color:#504354}input,select{width:100%;min-height:46px;border:1px solid #dcd2df;border-radius:10px;background:#fff;padding:11px 12px;color:var(--ink);font:inherit;outline:none}input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px #9564a420}.unit{position:relative}.unit input{padding-right:42px}.unit b{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted)}.field small{font-size:10px;color:var(--muted)}.shape-fields{margin-top:13px}.shape-fields[hidden]{display:none!important}.divider{height:1px;background:var(--line);margin:20px 0}.actions{display:flex;gap:9px;margin-top:19px}.btn{border:0;border-radius:10px;padding:13px 16px;font:700 12px inherit;cursor:pointer}.primary{background:var(--plum);color:white;flex:1}.secondary{background:#f0eaf2;color:var(--plum)}.result-panel{grid-column:1/-1}.result{background:linear-gradient(145deg,#2c1833,#57345f);color:white;border-radius:16px;padding:22px}.result .eyebrow{color:#e3cde9}.amount{font-size:clamp(38px,7vw,54px);font-weight:900;letter-spacing:-.055em;line-height:1.15;margin:8px 0 3px}.amount span{font-size:16px;letter-spacing:0;color:#e5d7e8}.result-sub{font-size:12px;color:#e8dce9;margin:0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}.stat{padding:12px;border:1px solid #ffffff29;background:#ffffff0d;border-radius:11px}.stat small{display:block;color:#e3d3e7;font-size:10px}.stat strong{display:block;font-size:16px;margin-top:4px}.breakdown{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.break{border:1px solid var(--line);border-radius:11px;padding:12px}.break small{display:block;color:var(--muted);font-size:10px}.break strong{font-size:14px}.notice{margin-top:13px;padding:13px;border-radius:11px;background:#f8f2e8;border:1px solid #eee1ca;color:#66543a;font-size:11px}.tips{margin-top:17px;color:var(--muted);font-size:11px}.tips strong{color:var(--ink)}footer{text-align:center;color:#948996;font-size:10px;padding:0 16px 28px}
+@media(max-width:720px){header{padding:26px 18px 43px}.layout{grid-template-columns:1fr}.panel{padding:19px}main{padding:0 12px}.result-panel{grid-column:auto}.stats{grid-template-columns:1fr 1fr}.stat:last-child{grid-column:1/-1}}
+@media(max-width:370px){.fields{grid-template-columns:1fr}.field.full{grid-column:auto}.actions{flex-direction:column}}
+</style></head>
 <body>
-<header><div class="head"><div class="eyebrow">Ferramenta profissional para confeiteiras</div><div class="brand">Confeitaria <span>Pro</span></div><p class="sub">Calcula a quantidade estimada de massa para qualquer forma, ajustando o diâmetro e a altura do bolo.</p></div></header>
+<header><div class="head"><div class="eyebrow">Ferramenta profissional para confeiteiras</div><div class="brand">Confeitaria <span>Pro</span></div><p class="sub">Calcula o volume e a quantidade estimada de massa para as tuas formas. Usa medidas personalizadas, compara formatos e ajusta a quantidade de bolos.</p></div></header>
 <main><div class="layout">
 <section class="panel">
-<h2>1. Define a tua receita de referência</h2><p class="hint">Introduz uma forma e a quantidade de massa que já conheces para a tua receita.</p>
-<div class="fieldgrid">
-<div class="field"><label for="refD">Diâmetro da forma</label><div class="unit"><input id="refD" type="number" min="5" max="100" step=".5" value="20"><b>cm</b></div></div>
-<div class="field"><label for="refH">Altura da forma</label><div class="unit"><input id="refH" type="number" min="3" max="50" step=".5" value="10"><b>cm</b></div></div>
-<div class="field full"><label for="refW">Quantidade de massa crua da receita</label><div class="unit"><input id="refW" type="number" min="1" step="1" value="1000"><b>g</b></div><small>Exemplo: se a tua receita enche uma forma de 20 × 10 cm, indica quantos gramas de massa usas.</small></div>
-</div>
-<div class="tip"><strong>Importante:</strong> os valores iniciais são apenas exemplos. Substitui-os pelos dados de uma receita tua já testada para obter resultados úteis.</div>
+<h2 class="section-title">01 · Receita de referência</h2><p class="hint">Indica uma forma e a quantidade de massa que já utilizas numa receita testada.</p>
+<div class="field"><label for="baseShape">Formato da forma</label><select id="baseShape"><option value="round">Redonda</option><option value="square">Quadrada</option><option value="rect">Rectangular</option></select></div>
+<div class="fields shape-fields" id="baseRound"><div class="field"><label for="baseD">Diâmetro</label><div class="unit"><input id="baseD" type="number" min="1" step=".1" value="20"><b>cm</b></div></div></div>
+<div class="fields shape-fields" id="baseSquare" hidden><div class="field"><label for="baseS">Lado</label><div class="unit"><input id="baseS" type="number" min="1" step=".1" value="20"><b>cm</b></div></div></div>
+<div class="fields shape-fields" id="baseRect" hidden><div class="field"><label for="baseL">Comprimento</label><div class="unit"><input id="baseL" type="number" min="1" step=".1" value="25"><b>cm</b></div><label for="baseW">Largura</label><div class="unit"><input id="baseW" type="number" min="1" step=".1" value="15"><b>cm</b></div></div></div>
+<div class="fields"><div class="field"><label for="baseH">Altura da forma</label><div class="unit"><input id="baseH" type="number" min="1" step=".1" value="10"><b>cm</b></div></div><div class="field"><label for="baseMass">Massa utilizada</label><div class="unit"><input id="baseMass" type="number" min="1" step="1" value="1000"><b>g</b></div></div></div>
+<div class="tips"><strong>Dica:</strong> usa a quantidade de massa crua que realmente colocas nessa forma, não o peso do bolo depois de assado.</div>
 </section>
 <section class="panel">
-<h2>2. Escolhe a forma desejada</h2><p class="hint">Indica o diâmetro e a altura que pretendes preparar.</p>
-<div class="fieldgrid">
-<div class="field"><label for="targetD">Diâmetro da forma</label><select id="targetD"><option>10</option><option>12</option><option>14</option><option>15</option><option>16</option><option>18</option><option selected>20</option><option>22</option><option>24</option><option>25</option><option>26</option><option>28</option><option>30</option><option>35</option><option>40</option></select><small>Medida em centímetros</small></div>
-<div class="field"><label for="targetH">Altura pretendida</label><select id="targetH"><option>8</option><option selected>10</option><option>12</option><option>15</option><option>17</option><option>20</option><option>22</option><option>25</option></select><small>Medida em centímetros</small></div>
-</div>
-<div class="actions"><button class="btn primary" id="calc">Calcular quantidade</button><button class="btn secondary" id="reset" type="button">Repor</button></div>
-<div class="result" aria-live="polite"><div class="eyebrow">Quantidade estimada de massa crua</div><div class="amount" id="grams">1 000 <span>g</span></div><p class="resultnote" id="kg">Equivalente a 1,00 kg de massa</p><div class="stats"><div class="stat"><small>Volume da forma</small><strong id="volume">3,14 L</strong></div><div class="stat"><small>Multiplicador da receita</small><strong id="factor">1,00×</strong></div></div></div>
-<div class="notice">Estimativa baseada na proporção do volume de formas cilíndricas. A densidade da massa, o tipo de receita, a fermentação e o espaço livre na forma podem alterar o resultado. Confirma sempre com os teus testes.</div>
+<h2 class="section-title">02 · Forma pretendida</h2><p class="hint">Escolhe o formato, introduz as medidas e define quantos bolos vais preparar.</p>
+<div class="field"><label for="targetShape">Formato da forma</label><select id="targetShape"><option value="round">Redonda</option><option value="square">Quadrada</option><option value="rect">Rectangular</option></select></div>
+<div class="fields shape-fields" id="targetRound"><div class="field"><label for="targetD">Diâmetro</label><div class="unit"><input id="targetD" type="number" min="1" step=".1" value="20"><b>cm</b></div></div></div>
+<div class="fields shape-fields" id="targetSquare" hidden><div class="field"><label for="targetS">Lado</label><div class="unit"><input id="targetS" type="number" min="1" step=".1" value="20"><b>cm</b></div></div></div>
+<div class="fields shape-fields" id="targetRect" hidden><div class="field"><label for="targetL">Comprimento</label><div class="unit"><input id="targetL" type="number" min="1" step=".1" value="25"><b>cm</b></div><label for="targetW">Largura</label><div class="unit"><input id="targetW" type="number" min="1" step=".1" value="15"><b>cm</b></div></div></div>
+<div class="fields"><div class="field"><label for="targetH">Altura desejada</label><div class="unit"><input id="targetH" type="number" min="1" step=".1" value="10"><b>cm</b></div></div><div class="field"><label for="quantity">Número de bolos iguais</label><input id="quantity" type="number" min="1" max="500" step="1" value="1"></div></div>
+<div class="actions"><button class="btn primary" id="calculate">Calcular quantidade</button><button class="btn secondary" id="reset" type="button">Repor</button></div>
+</section>
+<section class="panel result-panel">
+<h2 class="section-title">03 · Resultado do cálculo</h2><p class="hint">Estimativa de massa crua necessária para a forma e quantidade escolhidas.</p>
+<div class="result" aria-live="polite"><div class="eyebrow">Massa total necessária</div><div class="amount" id="grams">1 000 <span>g</span></div><p class="result-sub" id="kg">1,00 kg · para 1 bolo</p><div class="stats"><div class="stat"><small>Volume de uma forma</small><strong id="volume">3,14 L</strong></div><div class="stat"><small>Multiplicador por bolo</small><strong id="factor">1,00×</strong></div><div class="stat"><small>Quantidade de bolos</small><strong id="cakes">1</strong></div></div></div>
+<div class="breakdown"><div class="break"><small>Massa por bolo</small><strong id="perCake">1 000 g</strong></div><div class="break"><small>Volume total das formas</small><strong id="totalVolume">3,14 L</strong></div></div>
+<div class="notice"><strong>Nota importante:</strong> o cálculo compara volumes geométricos. A densidade da massa, a receita, o crescimento no forno e o espaço livre da forma podem alterar a quantidade real. Valida o resultado com os teus testes antes de produzir encomendas.</div>
 </section></div></main>
-<footer>Confeitaria Pro · Calculadora de volumes de massa · Feita para facilitar o trabalho das confeiteiras</footer>
+<footer>Confeitaria Pro · Calculadora de volumes e quantidades de massa</footer>
 <script>
-const $=id=>document.getElementById(id);
+const el=id=>document.getElementById(id);
+function shapeVolume(prefix){
+ const shape=el(prefix+'Shape').value,h=Number(el(prefix+'H').value);
+ if(shape==='round'){const d=Number(el(prefix+(prefix==='base'?'D':'D')).value);return Math.PI*(d/2)**2*h}
+ if(shape==='square'){const s=Number(el(prefix+'S').value);return s*s*h}
+ const l=Number(el(prefix+'L').value),w=Number(el(prefix+'W').value);return l*w*h;
+}
+function validShape(prefix){const shape=el(prefix+'Shape').value;const ids=shape==='round'?[prefix+'D']:shape==='square'?[prefix+'S']:[prefix+'L',prefix+'W'];return [...ids,prefix+'H'].every(id=>Number(el(id).value)>0&&Number.isFinite(Number(el(id).value)))}
 function fmt(n,d=0){return n.toLocaleString('pt-PT',{minimumFractionDigits:d,maximumFractionDigits:d})}
-function calculate(){const rd=Number($('refD').value),rh=Number($('refH').value),rw=Number($('refW').value),td=Number($('targetD').value),th=Number($('targetH').value);
-if(!(rd>0&&rh>0&&rw>0&&td>0&&th>0)){alert('Preenche todos os campos com valores maiores que zero.');return}
-const base=Math.PI*(rd/2)**2*rh,target=Math.PI*(td/2)**2*th,f=target/base,g=rw*f;
-$('grams').innerHTML=fmt(g)+' <span>g</span>';$('kg').textContent='Equivalente a '+fmt(g/1000,2)+' kg de massa';$('volume').textContent=fmt(target/1000,2)+' L';$('factor').textContent=fmt(f,2)+'×'}
-$('calc').addEventListener('click',calculate);
-['refD','refH','refW','targetD','targetH'].forEach(id=>$(id).addEventListener('change',calculate));
-$('reset').addEventListener('click',()=>{$('refD').value=20;$('refH').value=10;$('refW').value=1000;$('targetD').value='20';$('targetH').value='10';calculate()});
-calculate();
+function updateShape(prefix){const s=el(prefix+'Shape').value;['Round','Square','Rect'].forEach(k=>el(prefix+k).hidden=true);el(prefix+(s==='round'?'Round':s==='square'?'Square':'Rect')).hidden=false}
+function calculate(){
+ const mass=Number(el('baseMass').value),qty=Number(el('quantity').value);
+ if(!validShape('base')||!validShape('target')||!(mass>0)||!(qty>0)||qty>500){alert('Confirma as medidas, a quantidade de massa e o número de bolos. Todos os valores devem ser maiores que zero.');return}
+ const bv=shapeVolume('base'),tv=shapeVolume('target'),factor=tv/bv,each=mass*factor,total=each*qty;
+ el('grams').innerHTML=fmt(total)+' <span>g</span>';el('kg').textContent=fmt(total/1000,2)+' kg · para '+fmt(qty)+' bolo(s)';
+ el('volume').textContent=fmt(tv/1000,2)+' L';el('factor').textContent=fmt(factor,2)+'×';el('cakes').textContent=fmt(qty);
+ el('perCake').textContent=fmt(each)+' g';el('totalVolume').textContent=fmt(tv*qty/1000,2)+' L';
+}
+['base','target'].forEach(p=>{el(p+'Shape').addEventListener('change',()=>{updateShape(p);calculate()})});
+document.querySelectorAll('input,select').forEach(n=>n.addEventListener('change',()=>{if(n.id!=='baseShape'&&n.id!=='targetShape')calculate()}));
+el('calculate').addEventListener('click',calculate);
+el('reset').addEventListener('click',()=>{el('baseShape').value='round';el('baseD').value=20;el('baseH').value=10;el('baseMass').value=1000;el('targetShape').value='round';el('targetD').value=20;el('targetH').value=10;el('quantity').value=1;el('baseS').value=20;el('baseL').value=25;el('baseW').value=15;el('targetS').value=20;el('targetL').value=25;el('targetW').value=15;updateShape('base');updateShape('target');calculate()});
+updateShape('base');updateShape('target');calculate();
 </script></body></html>
