@@ -24,6 +24,8 @@ export type WeddingCakeRecipe = {
   preparation: RecipeStep[];
   notes: string[];
   calibration: {
+    referencePans: { diameterCm: number; heightCm: number }[];
+    scalingMethod: "combined-cylinder-volume" | "pending";
     rawBatterYieldGrams: number | null;
     referencePanDiameterCm: number | null;
     referencePanHeightCm: number | null;
@@ -119,6 +121,11 @@ export const weddingCakeRecipes: Record<WeddingCakeRecipe["id"], WeddingCakeReci
       "O destino do líquido da demolha não foi especificado na receita original.",
     ],
     calibration: {
+      referencePans: [
+        { diameterCm: 20, heightCm: 12 },
+        { diameterCm: 14, heightCm: 13 },
+      ],
+      scalingMethod: "combined-cylinder-volume",
       rawBatterYieldGrams: null,
       referencePanDiameterCm: null,
       referencePanHeightCm: null,
@@ -127,8 +134,6 @@ export const weddingCakeRecipes: Record<WeddingCakeRecipe["id"], WeddingCakeReci
       bakingTime: null,
       pendingQuestions: [
         "Confirmar se a quantidade correcta é 14 ovos inteiros.",
-        "Indicar o peso total aproximado da massa crua produzida por esta receita.",
-        "Indicar o diâmetro e a altura da forma de referência para este rendimento, ou o peso de massa colocado em cada forma.",
         "Confirmar se as 300 g de passas são pesadas depois de demolhadas e escorridas.",
         "Confirmar se o líquido de vinho e brandy da demolha é utilizado na massa ou descartado.",
         "Indicar a temperatura e o tempo de forno, se aplicável.",
@@ -150,6 +155,8 @@ export const weddingCakeRecipes: Record<WeddingCakeRecipe["id"], WeddingCakeReci
       rawBatterPerPanGrams: null,
       ovenTemperature: null,
       bakingTime: null,
+      referencePans: [],
+      scalingMethod: "pending",
       pendingQuestions: ["Aguardar receita original."],
     },
   },
