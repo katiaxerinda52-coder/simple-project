@@ -241,3 +241,8 @@ Estas duas formas são a referência conjunta para a escala proporcional por vol
 ### Confirmações e acabamento — massa de noiva com álcool
 
 A autora confirmou que a receita utiliza 14 ovos inteiros. As passas são demolhadas na mistura de vinho tinto e brandy/conhaque durante pelo menos 7 dias. O líquido dessa demolha é reservado e utilizado para humedecer o bolo ainda quente, depois de sair do forno, em quantidade suficiente conforme a absorção — sem dose fixa informada. O bolo não é desenformado nessa fase: permanece na forma, é embrulhado em papel aderente e arrefece até ao dia seguinte. Continua pendente apenas confirmar se as 300 g de passas são pesadas antes ou depois de demolhar/escorrer, além do rendimento em massa crua e dos dados de forno.
+
+
+### Dados de pesagem e forno — massa de noiva com álcool
+
+A autora esclareceu que as 300 g de uvas passas são pesadas antes de demolhar; depois de demolhadas, são utilizadas na massa. A cozedura é longa e lenta: forno a 160 °C durante aproximadamente 1 hora e 45 minutos. Esta referência deve ser apresentada como orientação, pois o tempo pode variar com o forno e as dimensões/profundidade da forma. O rendimento em peso da massa crua ainda não é conhecido e não deve ser inventado.
