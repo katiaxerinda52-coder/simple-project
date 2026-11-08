@@ -220,3 +220,10 @@ Estes dados são necessários para calibrar os cálculos e garantir que a aplica
 ---
 
 **Nota de implementação:** a primeira interface foi implementada em `src/routes/index.tsx`, com estilos em `src/styles.css` e metadados em `src/routes/__root.tsx`. A interface já permite configurar bolos individuais e de vários andares, mas os cálculos reais permanecem bloqueados até serem inseridas e validadas as três receitas originais. Preservar a estrutura TanStack Start e não editar ficheiros gerados ou migrações geridas pelo Lovable.
+
+
+## 13. Primeira receita recebida — massa de noiva com álcool
+
+Em 08/11/2026 foi recebida a receita original de massa de noiva com álcool e registada internamente em `src/data/wedding-cake-recipes.ts`. O registo preserva a demolha de passas, a calda de caramelo, os ingredientes da massa, a sequência de preparo e as notas sobre papel de alumínio e bailarina de flores.
+
+A indicação manuscrita/digitalizada “1 4 ovos inteiros” foi interpretada provisoriamente como 14 ovos e está marcada para confirmação. Também aguardam confirmação: peso de massa crua produzido, forma de referência, se as passas são pesadas escorridas, destino do líquido da demolha, temperatura e tempo de forno. Por isso, esta receita está registada, mas ainda não está calibrada para gerar quantidades por diâmetro/altura.
