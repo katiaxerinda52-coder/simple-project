@@ -36,7 +36,7 @@ function Index() {
   const [activeTab, setActiveTab] = useState("ingredients");
   const selectedDough = doughs.find((item) => item.id === dough) ?? doughs[1];
   const diameterOptions = useMemo(() => Array.from({ length: 26 }, (_, i) => i + 10), []);
-  const recipeKey = dough === "alcohol" ? "alcohol" : dough === "without" ? "without-alcohol" : "black-beer";
+  const recipeKey: keyof typeof weddingCakeRecipes = dough === "alcohol" ? "alcohol" : dough === "without" ? "without-alcohol" : "black-beer";
   const selectedRecipe = weddingCakeRecipes[recipeKey];
   const targetPans = mode === "single"
     ? [{ id: 1, diameterCm: diameter, heightCm: height }]
