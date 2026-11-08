@@ -219,4 +219,4 @@ Estes dados são necessários para calibrar os cálculos e garantir que a aplica
 
 ---
 
-**Nota de implementação:** o repositório está ligado ao Lovable. Seguir as orientações existentes em AGENTS.md: implementar alterações de aplicação pelo editor Lovable, preservar o histórico de Git e não editar ficheiros gerados ou migrações geridas pelo Lovable.
+**Nota de implementação:** a primeira interface foi implementada em `src/routes/index.tsx`, com estilos em `src/styles.css` e metadados em `src/routes/__root.tsx`. A interface já permite configurar bolos individuais e de vários andares, mas os cálculos reais permanecem bloqueados até serem inseridas e validadas as três receitas originais. Preservar a estrutura TanStack Start e não editar ficheiros gerados ou migrações geridas pelo Lovable.
