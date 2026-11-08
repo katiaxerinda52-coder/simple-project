@@ -1,23 +1,139 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { ArrowRight, CakeSlice, Check, ChevronDown, CircleHelp, FileDown, Layers3, Minus, Plus, Printer, Sparkles } from "lucide-react";
 
-// The home route ships no og:image, so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
   component: Index,
+  head: () => ({
+    meta: [
+      { title: "Massas de Noiva Pro | Calculadora profissional" },
+      { name: "description", content: "Calculadora profissional de massas de noiva para confeiteiras." },
+    ],
+  }),
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
+type Floor = { id: number; diameter: number; height: number };
+const heights = [10, 12, 15, 17];
+const doughs = [
+  { id: "alcohol", name: "Massa de noiva com álcool", detail: "Receita tradicional" },
+  { id: "without", name: "Massa de noiva sem álcool", detail: "Sem bebidas alcoólicas" },
+  { id: "beer", name: "Massa de noiva com cerveja preta", detail: "Com cerveja preta" },
+];
+
 function Index() {
+  const [mode, setMode] = useState<"single" | "tiered">("single");
+  const [dough, setDough] = useState("without");
+  const [diameter, setDiameter] = useState(20);
+  const [height, setHeight] = useState(15);
+  const [floors, setFloors] = useState<Floor[]>([
+    { id: 1, diameter: 26, height: 15 },
+    { id: 2, diameter: 20, height: 12 },
+    { id: 3, diameter: 14, height: 10 },
+  ]);
+  const [calculated, setCalculated] = useState(false);
+  const [activeTab, setActiveTab] = useState("ingredients");
+  const selectedDough = doughs.find((item) => item.id === dough) ?? doughs[1];
+  const diameterOptions = useMemo(() => Array.from({ length: 26 }, (_, i) => i + 10), []);
+
+  const updateFloor = (id: number, field: "diameter" | "height", value: number) => {
+    setFloors((current) => current.map((floor) => floor.id === id ? { ...floor, [field]: value } : floor));
+    setCalculated(false);
+  };
+  const addFloor = () => {
+    setFloors((current) => [...current, { id: Math.max(0, ...current.map((f) => f.id)) + 1, diameter: 18, height: 12 }]);
+    setCalculated(false);
+  };
+  const removeFloor = (id: number) => {
+    setFloors((current) => current.length > 2 ? current.filter((floor) => floor.id !== id) : current);
+    setCalculated(false);
+  };
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="app-shell">
+      <header className="topbar">
+        <a className="brand" href="/" aria-label="Massas de Noiva Pro início">
+          <span className="brand-mark"><CakeSlice size={22} strokeWidth={1.7} /></span>
+          <span><strong>massas de noiva <i>pro</i></strong><small>PRECISÃO EM CADA ANDAR</small></span>
+        </a>
+        <div className="topbar-right"><span className="status-dot" /> FERRAMENTA PROFISSIONAL <span className="topbar-divider" /> <span className="topbar-version">V 1.0</span></div>
+      </header>
+
+      <section className="hero">
+        <div className="hero-copy">
+          <div className="eyebrow"><Sparkles size={13} /> A SUA CONFEITARIA, COM MAIS PRECISÃO</div>
+          <h1>O segredo de um bolo perfeito começa <em>na medida certa.</em></h1>
+          <p>Calcule a quantidade de massa e organize os ingredientes para produzir bolos de noiva com confiança.</p>
+          <div className="hero-note"><span className="hero-note-icon"><Check size={14} /></span> Cálculos pensados para a realidade da confeitaria profissional</div>
+        </div>
+        <div className="hero-art" aria-hidden="true">
+          <div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" />
+          <div className="cake-illustration"><div className="cake-top" /><div className="cake-tier tier-top" /><div className="cake-tier tier-middle" /><div className="cake-tier tier-bottom" /><div className="cake-plate" /></div>
+          <span className="art-spark spark-a">✦</span><span className="art-spark spark-b">✧</span>
+          <div className="art-caption">FEITO PARA CONFEITEIRAS</div>
+        </div>
+      </section>
+
+      <section className="workspace">
+        <div className="section-heading">
+          <div><span className="section-kicker">CALCULADORA</span><h2>O que vamos preparar hoje?</h2><p>Escolha o formato do bolo para começar.</p></div>
+          <div className="step-indicator"><span>01</span><div /><span className="step-muted">02</span><div /><span className="step-muted">03</span></div>
+        </div>
+
+        <div className="mode-grid">
+          <button className={`mode-card ${mode === "single" ? "selected" : ""}`} onClick={() => { setMode("single"); setCalculated(false); }}>
+            <span className="mode-icon"><CakeSlice size={22} /></span><span className="mode-text"><strong>Bolo individual</strong><small>Uma única forma, uma receita ajustada.</small></span><span className="mode-check">{mode === "single" && <Check size={15} />}</span>
+          </button>
+          <button className={`mode-card ${mode === "tiered" ? "selected" : ""}`} onClick={() => { setMode("tiered"); setCalculated(false); }}>
+            <span className="mode-icon"><Layers3 size={22} /></span><span className="mode-text"><strong>Bolo de vários andares</strong><small>Configure cada andar e consolide a receita.</small></span><span className="mode-check">{mode === "tiered" && <Check size={15} />}</span>
+          </button>
+        </div>
+
+        <div className="calculator-card">
+          <div className="card-topline"><div><span className="section-kicker">CONFIGURAÇÃO</span><h3>Personalize o seu bolo</h3></div><span className="required-label">* Campos obrigatórios</span></div>
+          <div className="field-block">
+            <label>01 <span>TIPO DE MASSA</span></label>
+            <div className="dough-grid">
+              {doughs.map((item) => <button key={item.id} className={`dough-option ${dough === item.id ? "active" : ""}`} onClick={() => { setDough(item.id); setCalculated(false); }}>
+                <span className="radio-dot">{dough === item.id && <span />}</span><span><strong>{item.name}</strong><small>{item.detail}</small></span>
+              </button>)}
+            </div>
+          </div>
+
+          {mode === "single" ? <div className="field-block dimension-block">
+            <label>02 <span>DIMENSÕES DA FORMA</span></label>
+            <div className="dimension-grid">
+              <div className="input-group"><span>DIÂMETRO</span><div className="select-wrap"><select value={diameter} onChange={(e) => { setDiameter(Number(e.target.value)); setCalculated(false); }}>{diameterOptions.map((n) => <option key={n} value={n}>{n} cm</option>)}</select><ChevronDown size={16} /></div></div>
+              <div className="input-group"><span>ALTURA</span><div className="select-wrap"><select value={height} onChange={(e) => { setHeight(Number(e.target.value)); setCalculated(false); }}>{heights.map((n) => <option key={n} value={n}>{n} cm</option>)}</select><ChevronDown size={16} /></div></div>
+            </div>
+            <div className="dimension-hint">Diâmetros disponíveis de 10 a 35 cm · Alturas de 10, 12, 15 e 17 cm</div>
+          </div> : <div className="field-block floors-block">
+            <div className="floors-title"><label>02 <span>DIMENSÕES POR ANDAR</span></label><span className="floor-count">{floors.length} ANDARES</span></div>
+            <div className="floor-list">
+              {floors.map((floor, index) => <div className="floor-row" key={floor.id}>
+                <span className="floor-number">{String(index + 1).padStart(2, "0")}</span><strong>Andar {index + 1}</strong>
+                <div className="floor-select"><small>DIÂMETRO</small><div className="select-wrap"><select value={floor.diameter} onChange={(e) => updateFloor(floor.id, "diameter", Number(e.target.value))}>{diameterOptions.map((n) => <option key={n} value={n}>{n} cm</option>)}</select><ChevronDown size={14} /></div></div>
+                <div className="floor-select"><small>ALTURA</small><div className="select-wrap"><select value={floor.height} onChange={(e) => updateFloor(floor.id, "height", Number(e.target.value))}>{heights.map((n) => <option key={n} value={n}>{n} cm</option>)}</select><ChevronDown size={14} /></div></div>
+                <button className="remove-floor" onClick={() => removeFloor(floor.id)} disabled={floors.length <= 2} aria-label={`Remover andar ${index + 1}`}><Minus size={16} /></button>
+              </div>)}
+            </div>
+            <button className="add-floor" onClick={addFloor}><Plus size={15} /> Adicionar andar</button>
+          </div>}
+
+          <div className="calculator-actions">
+            <div className="privacy-note"><CircleHelp size={15} /><span>As suas configurações ficam nesta sessão.</span></div>
+            <button className="calculate-button" onClick={() => { setCalculated(true); setActiveTab("ingredients"); }}>Preparar cálculo <ArrowRight size={17} /></button>
+          </div>
+        </div>
+
+        {calculated && <section className="results-card">
+          <div className="results-heading"><div><span className="section-kicker">RESULTADO</span><h3>Ficha de produção</h3></div><button className="print-button" onClick={() => window.print()}><Printer size={16} /> Imprimir / Guardar PDF</button></div>
+          <div className="results-summary"><div><small>TIPO DE MASSA</small><strong>{selectedDough.name}</strong></div><div><small>CONFIGURAÇÃO</small><strong>{mode === "single" ? `${diameter} cm × ${height} cm` : `${floors.length} andares`}</strong></div><div><small>ESTADO DA RECEITA</small><strong className="pending-text">Em configuração</strong></div></div>
+          <div className="result-tabs">{[["ingredients","Ingredientes"],["distribution","Distribuição"],["method","Preparo"]].map(([id,label]) => <button key={id} className={activeTab === id ? "active" : ""} onClick={() => setActiveTab(id)}>{label}</button>)}</div>
+          <div className="pending-panel"><span className="pending-icon"><FileDown size={22} /></span><h4>Estamos a preparar esta receita.</h4><p>As quantidades e o método de preparo de <strong>{selectedDough.name.toLowerCase()}</strong> serão apresentados aqui depois de configurarmos a sua receita original.</p><span className="pending-tag">AGUARDA RECEITA ORIGINAL</span></div>
+        </section>}
+      </section>
+
+      <footer className="footer"><div className="footer-brand">massas de noiva <i>pro</i></div><span>Precisão, técnica e confiança em cada criação.</span><span className="footer-copy">© 2026 · TODOS OS DIREITOS RESERVADOS</span></footer>
+    </main>
   );
 }
