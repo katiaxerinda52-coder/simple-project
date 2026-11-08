@@ -227,3 +227,12 @@ Estes dados são necessários para calibrar os cálculos e garantir que a aplica
 Em 08/11/2026 foi recebida a receita original de massa de noiva com álcool e registada internamente em `src/data/wedding-cake-recipes.ts`. O registo preserva a demolha de passas, a calda de caramelo, os ingredientes da massa, a sequência de preparo e as notas sobre papel de alumínio e bailarina de flores.
 
 A indicação manuscrita/digitalizada “1 4 ovos inteiros” foi interpretada provisoriamente como 14 ovos e está marcada para confirmação. Também aguardam confirmação: peso de massa crua produzido, forma de referência, se as passas são pesadas escorridas, destino do líquido da demolha, temperatura e tempo de forno. Por isso, esta receita está registada, mas ainda não está calibrada para gerar quantidades por diâmetro/altura.
+
+
+### Referência de rendimento — massa de noiva com álcool
+
+A proprietária esclareceu que a receita completa corresponde à produção simultânea de:
+- 1 forma de 20 cm de diâmetro × 12 cm de altura.
+- 1 forma de 14 cm de diâmetro × 13 cm de altura.
+
+Estas duas formas são a referência conjunta para a escala proporcional por volume cilíndrico. O sistema pode estimar a proporção da receita e escalar os ingredientes para a soma dos volumes das formas escolhidas. Ainda não deve afirmar o peso em gramas da massa crua por forma: falta medir o rendimento total de massa crua desta receita ou o peso efectivamente colocado em cada uma das formas de referência.
