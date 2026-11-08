@@ -143,7 +143,6 @@ export const weddingCakeRecipes: Record<WeddingCakeRecipe["id"], WeddingCakeReci
       ovenTemperature: "160 °C",
       bakingTime: "1 hora e 45 minutos (referência indicada pela autora)",
       pendingQuestions: [
-        "Confirmar se as 300 g de passas correspondem ao peso antes ou depois de demolhar e escorrer.",
         "Confirmar se 1 hora e 45 minutos é o tempo de referência para as duas formas de calibração ou se varia conforme o tamanho da forma.",
       ],
     },
