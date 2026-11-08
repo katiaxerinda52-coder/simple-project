@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowRight, CakeSlice, Check, ChevronDown, CircleHelp, FileDown, Layers3, Minus, Plus, Printer, Sparkles } from "lucide-react";
+import { weddingCakeRecipes } from "../data/wedding-cake-recipes";
+import { scaleRecipeByReferenceVolume } from "../data/recipe-scaling";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -34,6 +36,18 @@ function Index() {
   const [activeTab, setActiveTab] = useState("ingredients");
   const selectedDough = doughs.find((item) => item.id === dough) ?? doughs[1];
   const diameterOptions = useMemo(() => Array.from({ length: 26 }, (_, i) => i + 10), []);
+  const recipeKey = dough === "alcohol" ? "alcohol" : dough === "without" ? "without-alcohol" : "black-beer";
+  const selectedRecipe = weddingCakeRecipes[recipeKey];
+  const targetPans = mode === "single"
+    ? [{ id: 1, diameterCm: diameter, heightCm: height }]
+    : floors.map((floor) => ({ id: floor.id, diameterCm: floor.diameter, heightCm: floor.height }));
+  const scaledResult = selectedRecipe.status === "configured" && selectedRecipe.calibration.referencePans.length
+    ? scaleRecipeByReferenceVolume(selectedRecipe.batterIngredients, selectedRecipe.calibration.referencePans, targetPans)
+    : null;
+  const formatQuantity = (quantity: number, unit: string) => {
+    const rounded = Number(quantity.toFixed(unit === "g" ? 1 : 2));
+    return unit === "g" ? `${rounded.toLocaleString("pt-PT")} g` : `${rounded.toLocaleString("pt-PT")} ${unit}`;
+  };
 
   const updateFloor = (id: number, field: "diameter" | "height", value: number) => {
     setFloors((current) => current.map((floor) => floor.id === id ? { ...floor, [field]: value } : floor));
@@ -127,9 +141,28 @@ function Index() {
 
         {calculated && <section className="results-card">
           <div className="results-heading"><div><span className="section-kicker">RESULTADO</span><h3>Ficha de produção</h3></div><button className="print-button" onClick={() => window.print()}><Printer size={16} /> Imprimir / Guardar PDF</button></div>
-          <div className="results-summary"><div><small>TIPO DE MASSA</small><strong>{selectedDough.name}</strong></div><div><small>CONFIGURAÇÃO</small><strong>{mode === "single" ? `${diameter} cm × ${height} cm` : `${floors.length} andares`}</strong></div><div><small>ESTADO DA RECEITA</small><strong className="pending-text">Em configuração</strong></div></div>
+          <div className="results-summary"><div><small>TIPO DE MASSA</small><strong>{selectedDough.name}</strong></div><div><small>CONFIGURAÇÃO</small><strong>{mode === "single" ? `${diameter} cm × ${height} cm` : `${floors.length} andares`}</strong></div><div><small>ESTADO DA RECEITA</small><strong className="pending-text">{scaledResult ? "Estimativa por volume" : "Em configuração"}</strong></div></div>
           <div className="result-tabs">{[["ingredients","Ingredientes"],["distribution","Distribuição"],["method","Preparo"]].map(([id,label]) => <button key={id} className={activeTab === id ? "active" : ""} onClick={() => setActiveTab(id)}>{label}</button>)}</div>
-          <div className="pending-panel"><span className="pending-icon"><FileDown size={22} /></span><h4>Estamos a preparar esta receita.</h4><p>As quantidades e o método de preparo de <strong>{selectedDough.name.toLowerCase()}</strong> serão apresentados aqui depois de configurarmos a sua receita original.</p><span className="pending-tag">AGUARDA RECEITA ORIGINAL</span></div>
+          {scaledResult ? <div className="recipe-results">
+            {activeTab === "ingredients" && <div className="ingredient-result">
+              <div className="calculation-note"><strong>Receita completa para preparar de uma só vez</strong><span>Factor de escala: {scaledResult.factor.toFixed(3)}× · Base: 20 × 12 cm + 14 × 13 cm</span></div>
+              <div className="ingredient-list">{scaledResult.ingredients.map((ingredient) => <div className="ingredient-line" key={ingredient.name}><span><strong>{ingredient.name}</strong>{ingredient.note && <small>{ingredient.note}</small>}</span><b>{formatQuantity(ingredient.totalQuantity, ingredient.unit)}</b></div>)}</div>
+              <p className="method-caveat">Estimativa proporcional ao volume cilíndrico das formas. A massa crua em gramas por forma será apresentada depois de confirmarmos o rendimento/peso real desta receita.</p>
+            </div>}
+            {activeTab === "distribution" && <div className="distribution-result">
+              {targetPans.map((pan) => {
+                const volume = Math.PI * Math.pow(pan.diameterCm / 2, 2) * pan.heightCm;
+                const share = volume / scaledResult.targetVolumeCm3;
+                return <div className="distribution-line" key={pan.id}><span><strong>Andar / forma {pan.id}</strong><small>{pan.diameterCm} cm × {pan.heightCm} cm</small></span><b>{(share * 100).toFixed(1)}% da massa total</b></div>;
+              })}
+              <div className="distribution-total"><span>Distribuição total</span><strong>100%</strong></div>
+              <p className="method-caveat">As percentagens representam a proporção de volume de cada forma no conjunto seleccionado, não um peso medido de massa crua.</p>
+            </div>}
+            {activeTab === "method" && <div className="method-result">
+              {[...selectedRecipe.components.flatMap((component) => component.steps), ...selectedRecipe.preparation].map((step, index) => <div className="method-step" key={step.title}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{step.title}</strong><p>{step.instructions}</p>{step.warning && <small className="warning-note">{step.warning}</small>}</div></div>)}
+              <div className="recipe-notes"><strong>Notas da receita</strong>{selectedRecipe.notes.map((note) => <p key={note}>{note}</p>)}</div>
+            </div>}
+          </div> : <div className="pending-panel"><span className="pending-icon"><FileDown size={22} /></span><h4>Estamos a preparar esta receita.</h4><p>As quantidades e o método de preparo de <strong>{selectedDough.name.toLowerCase()}</strong> serão apresentados aqui depois de configurarmos a sua receita original.</p><span className="pending-tag">AGUARDA RECEITA ORIGINAL</span></div>}
         </section>}
       </section>
 
