@@ -84,7 +84,7 @@ export const weddingCakeRecipes: Record<WeddingCakeRecipe["id"], WeddingCakeReci
       { name: "Noz-moscada em pó", quantity: 1, unit: "colher de chá" },
       { name: "Mix spice para bolo", quantity: 2, unit: "colher de chá" },
       { name: "Gengibre em pó", quantity: 0.5, unit: "colher de chá" },
-      { name: "Uvas passas demolhadas", quantity: 300, unit: "g", note: "As passas são demolhadas na mistura de vinho tinto e brandy/conhaque." },
+      { name: "Uvas passas", quantity: 300, unit: "g", note: "Pesar 300 g antes de demolhar; depois de demolhadas, utilizar estas passas na massa." },
       { name: "Fruta cristalizada", quantity: 130, unit: "g" },
       { name: "Amêndoas", quantity: 70, unit: "g" },
     ],
@@ -128,6 +128,7 @@ export const weddingCakeRecipes: Record<WeddingCakeRecipe["id"], WeddingCakeReci
       "A bailarina é uma peça de ferro que ajuda a distribuir o calor e a cozer a massa mais rapidamente; pode ser feita por um serralheiro.",
       "O líquido da demolha das passas é reservado para humedecer o bolo ainda quente, depois de sair do forno. Usar a quantidade que baste; não existe uma medida fixa indicada.",
       "Depois de humedecer, o bolo permanece na forma, é embrulhado em papel aderente e arrefece até ao dia seguinte antes de ser desenformado.",
+      "A cozedura é demorada: referência de forno a 160 °C durante cerca de 1 hora e 45 minutos. O tempo pode variar conforme o forno e o tamanho/profundidade da forma; confirmar a cozedura antes de retirar.",
     ],
     calibration: {
       referencePans: [
@@ -139,11 +140,11 @@ export const weddingCakeRecipes: Record<WeddingCakeRecipe["id"], WeddingCakeReci
       referencePanDiameterCm: null,
       referencePanHeightCm: null,
       rawBatterPerPanGrams: null,
-      ovenTemperature: null,
-      bakingTime: null,
+      ovenTemperature: "160 °C",
+      bakingTime: "1 hora e 45 minutos (referência indicada pela autora)",
       pendingQuestions: [
         "Confirmar se as 300 g de passas correspondem ao peso antes ou depois de demolhar e escorrer.",
-        "Indicar a temperatura e o tempo de forno, se aplicável.",
+        "Confirmar se 1 hora e 45 minutos é o tempo de referência para as duas formas de calibração ou se varia conforme o tamanho da forma.",
       ],
     },
   },
