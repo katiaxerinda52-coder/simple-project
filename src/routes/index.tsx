@@ -24,7 +24,7 @@ const doughs = [
 
 function Index() {
   const [mode, setMode] = useState<"single" | "tiered">("single");
-  const [dough, setDough] = useState("without");
+  const [dough, setDough] = useState("alcohol");
   const [diameter, setDiameter] = useState(20);
   const [height, setHeight] = useState(15);
   const [floors, setFloors] = useState<Floor[]>([
@@ -146,17 +146,24 @@ function Index() {
           {scaledResult ? <div className="recipe-results">
             {activeTab === "ingredients" && <div className="ingredient-result">
               <div className="calculation-note"><strong>Receita completa para preparar de uma só vez</strong><span>Factor de escala: {scaledResult.factor.toFixed(3)}× · Base: 20 × 12 cm + 14 × 13 cm</span></div>
+              <h4 className="ingredient-section-title">Ingredientes da massa</h4>
               <div className="ingredient-list">{scaledResult.ingredients.map((ingredient) => <div className="ingredient-line" key={ingredient.name}><span><strong>{ingredient.name}</strong>{ingredient.note && <small>{ingredient.note}</small>}</span><b>{formatQuantity(ingredient.totalQuantity, ingredient.unit)}</b></div>)}</div>
-              <p className="method-caveat">Estimativa proporcional ao volume cilíndrico das formas. A massa crua em gramas por forma será apresentada depois de confirmarmos o rendimento/peso real desta receita.</p>
+              {selectedRecipe.components.length > 0 && <><h4 className="ingredient-section-title">Preparações prévias</h4>{selectedRecipe.components.map((component) => <div className="component-ingredient-group" key={component.name}><strong>{component.name}</strong><div className="ingredient-list">{component.ingredients.map((ingredient) => <div className="ingredient-line" key={ingredient.name}><span><strong>{ingredient.name}</strong>{ingredient.note && <small>{ingredient.note}</small>}</span><b>{formatQuantity(ingredient.quantity * scaledResult.factor, ingredient.unit)}</b></div>)}</div></div>)}</>}
+              <p className="method-caveat">As quantidades são escaladas para o conjunto de formas seleccionado. A uva passa é pesada antes de demolhar. O líquido da demolha usado para humedecer o bolo é quanto baste, conforme a absorção. Estimativa proporcional ao volume cilíndrico; a massa crua em gramas por forma depende de uma pesagem real da receita.</p>
             </div>}
             {activeTab === "distribution" && <div className="distribution-result">
               {targetPans.map((pan) => {
                 const volume = Math.PI * Math.pow(pan.diameterCm / 2, 2) * pan.heightCm;
                 const share = volume / scaledResult.targetVolumeCm3;
-                return <div className="distribution-line" key={pan.id}><span><strong>Andar / forma {pan.id}</strong><small>{pan.diameterCm} cm × {pan.heightCm} cm</small></span><b>{(share * 100).toFixed(1)}% da massa total</b></div>;
+                return <div className="distribution-line" key={pan.id}><span><strong>{mode === "single" ? "Forma seleccionada" : `Andar / forma ${pan.id}`}</strong><small>{pan.diameterCm} cm × {pan.heightCm} cm</small></span><b>{(share * 100).toFixed(1)}% da massa total</b></div>;
               })}
               <div className="distribution-total"><span>Distribuição total</span><strong>100%</strong></div>
-              <p className="method-caveat">As percentagens representam a proporção de volume de cada forma no conjunto seleccionado, não um peso medido de massa crua.</p>
+              <h4 className="ingredient-section-title">Ingredientes estimados por forma</h4>
+              <p className="method-caveat">Cada coluna mostra a quantidade proporcional destinada à respectiva forma, calculada pelo volume.</p>
+              <div className="pan-ingredient-table"><div className="pan-ingredient-row pan-ingredient-header"><strong>Ingrediente</strong>{targetPans.map((pan) => <strong key={pan.id}>{pan.diameterCm} × {pan.heightCm} cm</strong>)}</div>
+                {scaledResult.ingredients.map((ingredient) => <div className="pan-ingredient-row" key={ingredient.name}><span>{ingredient.name}</span>{ingredient.byPan.map((part) => <b key={part.panId}>{formatQuantity(part.quantity, ingredient.unit)}</b>)}</div>)}
+              </div>
+              <p className="method-caveat">Valores proporcionais, não pesagens reais. A massa crua por forma deve ser confirmada numa produção de referência.</p>
             </div>}
             {activeTab === "method" && <div className="method-result">
               {[...selectedRecipe.components.flatMap((component) => component.steps), ...selectedRecipe.preparation].map((step, index) => <div className="method-step" key={step.title}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{step.title}</strong><p>{step.instructions}</p>{step.warning && <small className="warning-note">{step.warning}</small>}</div></div>)}
