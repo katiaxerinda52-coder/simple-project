@@ -161,7 +161,7 @@ function Index() {
               <h4 className="ingredient-section-title">Ingredientes estimados por forma</h4>
               <p className="method-caveat">Cada coluna mostra a quantidade proporcional destinada à respectiva forma, calculada pelo volume.</p>
               <div className="pan-ingredient-table"><div className="pan-ingredient-row pan-ingredient-header" style={{ gridTemplateColumns: `minmax(150px,1.5fr) repeat(${targetPans.length}, minmax(100px,1fr))` }}><strong>Ingrediente</strong>{targetPans.map((pan) => <strong key={pan.id}>{pan.diameterCm} × {pan.heightCm} cm</strong>)}</div>
-                {scaledResult.ingredients.map((ingredient) => <div className="pan-ingredient-row" key={ingredient.name}><span>{ingredient.name}</span>{ingredient.byPan.map((part) => <b key={part.panId}>{formatQuantity(part.quantity, ingredient.unit)}</b>)}</div>)}
+                {scaledResult.ingredients.map((ingredient) => <div className="pan-ingredient-row" key={ingredient.name} style={{ gridTemplateColumns: `minmax(150px,1.5fr) repeat(${targetPans.length}, minmax(100px,1fr))` }}><span>{ingredient.name}</span>{ingredient.byPan.map((part) => <b key={part.panId}>{formatQuantity(part.quantity, ingredient.unit)}</b>)}</div>)}
               </div>
               <p className="method-caveat">Valores proporcionais, não pesagens reais. A massa crua por forma deve ser confirmada numa produção de referência.</p>
             </div>}
