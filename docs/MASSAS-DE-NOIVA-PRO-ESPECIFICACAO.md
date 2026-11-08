@@ -236,3 +236,8 @@ A proprietária esclareceu que a receita completa corresponde à produção simu
 - 1 forma de 14 cm de diâmetro × 13 cm de altura.
 
 Estas duas formas são a referência conjunta para a escala proporcional por volume cilíndrico. O sistema pode estimar a proporção da receita e escalar os ingredientes para a soma dos volumes das formas escolhidas. Ainda não deve afirmar o peso em gramas da massa crua por forma: falta medir o rendimento total de massa crua desta receita ou o peso efectivamente colocado em cada uma das formas de referência.
+
+
+### Confirmações e acabamento — massa de noiva com álcool
+
+A autora confirmou que a receita utiliza 14 ovos inteiros. As passas são demolhadas na mistura de vinho tinto e brandy/conhaque durante pelo menos 7 dias. O líquido dessa demolha é reservado e utilizado para humedecer o bolo ainda quente, depois de sair do forno, em quantidade suficiente conforme a absorção — sem dose fixa informada. O bolo não é desenformado nessa fase: permanece na forma, é embrulhado em papel aderente e arrefece até ao dia seguinte. Continua pendente apenas confirmar se as 300 g de passas são pesadas antes ou depois de demolhar/escorrer, além do rendimento em massa crua e dos dados de forno.
