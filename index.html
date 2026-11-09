@@ -44,7 +44,7 @@ main{padding:0 18px;margin-top:-34px;margin-bottom:60px}.section{margin-bottom:2
 <div class="fields">
 <div class="field"><label for="recipeDiameter">DIÂMETRO DA FORMA-BASE</label><select id="recipeDiameter"></select></div>
 <div class="field"><label for="recipeHeight">ALTURA DA FORMA-BASE</label><select id="recipeHeight"><option value="10">10 cm</option><option value="12">12 cm</option><option value="15" selected>15 cm</option><option value="17">17 cm</option></select></div>
-<div class="field full"><label for="recipeMass">PESO TOTAL DA MASSA CRUA DA RECEITA-BASE</label><div class="unit"><input id="recipeMass" type="number" min="1" step="1" placeholder="Ex.: 2500"><b>gramas</b></div></div>
+<div class="field full"><label for="recipeMass">PESO TOTAL DA MASSA CRUA (OPCIONAL)</label><div class="unit"><input id="recipeMass" type="number" min="1" step="1" placeholder="Ex.: 2500"><b>gramas</b></div></div>
 </div>
 <div class="divider"></div>
 <div class="recipe-head"><div><h4>Ingredientes da receita</h4><p>Adiciona cada ingrediente com a quantidade original e a unidade correspondente.</p></div><button class="btn secondary" id="addIngredient" type="button">+ Ingrediente</button></div>
@@ -70,6 +70,25 @@ main{padding:0 18px;margin-top:-34px;margin-bottom:60px}.section{margin-bottom:2
 <script>
 const $=id=>document.getElementById(id), types={alcohol:'Massa de noiva com álcool',zero:'Massa de noiva sem álcool',beer:'Massa de noiva com cerveja preta'};
 const diameters=[14,16,18,20,22,24,26,28,30];let current='alcohol';let recipes={};
+const receitaCervejaBase={diameter:20,height:13,mass:null,baseVolume:volume(20,13)+volume(14,13),baseLabel:'2 formas: 20 cm + 14 cm × 13 cm',items:[
+{name:'Açúcar',amount:400,unit:'g'},
+{name:'Manteiga',amount:500,unit:'g'},
+{name:'Ovos inteiros',amount:13,unit:'unidade'},
+{name:'Calda de caramelo (água e açúcar)',amount:255,unit:'g'},
+{name:'Cerveja preta',amount:125,unit:'g'},
+{name:'Essência de brandy',amount:2,unit:'colher de chá'},
+{name:'Essência de café',amount:1,unit:'colher de chá'},
+{name:'Mix spice',amount:1,unit:'colher de chá'},
+{name:'Gengibre em pó',amount:0.5,unit:'colher de chá'},
+{name:'Raspas de laranja',amount:2,unit:'laranjas'},
+{name:'Farinha de trigo',amount:1250,unit:'g'},
+{name:'Passas demolhadas',amount:200,unit:'g'},
+{name:'Fruta cristalizada',amount:100,unit:'g'},
+{name:'Cerejas picadas',amount:8,unit:'unidade'},
+{name:'Amêndoa laminada ou amendoim',amount:100,unit:'g'},
+{name:'Nozes picadas',amount:100,unit:'g'},
+{name:'Fermento Royal',amount:60,unit:'g'}
+],notes:'Rendimento de referência: duas formas, uma de 20 cm de diâmetro e outra de 14 cm de diâmetro, ambas com 13 cm de altura. A calda de caramelo é preparada apenas com água e açúcar. A receita ainda não inclui modo de preparo detalhado.'};
 const receitaZeroBase={diameter:20,height:12,mass:null,items:[
 {name:'Calda de caramelo preparada (utilizada na massa)',amount:255,unit:'g'},
 {name:'Manteiga',amount:360,unit:'g'},
@@ -85,13 +104,13 @@ const receitaZeroBase={diameter:20,height:12,mass:null,items:[
 {name:'Gengibre em pó',amount:1,unit:'colher de chá'}
 ],preparation:{sauce:['160 g de açúcar','230 g de chantilly líquido','230 g de leite fresco'],sauceMethod:'Derreter completamente o açúcar numa panela. Adicionar cuidadosamente o chantilly líquido, mexendo até dissolver o caramelo. Juntar o leite fresco e deixar ferver por mais 2 minutos. Deixar arrefecer completamente; pode congelar.',method:'Bater a manteiga com o açúcar até obter uma mistura cremosa. Acrescentar os ovos um a um, depois a calda de caramelo preparada e a essência. Juntar metade da farinha e mexer delicadamente; acrescentar a outra metade e o fermento. Por fim, incorporar a uva passa, as cerejas picadas, a canela e o gengibre. Misturar e distribuir pelas formas.'}};
 try{recipes=JSON.parse(localStorage.getItem('massasNoivaProRecipes')||'{}')}catch(e){recipes={}}
-if(!recipes.zero)recipes.zero=receitaZeroBase;
+if(!recipes.zero)recipes.zero=receitaZeroBase;\nif(!recipes.beer)recipes.beer=receitaCervejaBase;
 function fillSelect(id,selected=20){$(id).innerHTML=diameters.map(d=>'<option value="'+d+'" '+(d===Number(selected)?'selected':'')+'>'+d+' cm</option>').join('')}
 fillSelect('diameter');fillSelect('recipeDiameter');
 function fmt(n,d=0){return Number(n).toLocaleString('pt-PT',{minimumFractionDigits:d,maximumFractionDigits:d})}
 function volume(d,h){return Math.PI*(d/2)**2*h}
-function factor(){const r=recipes[current];if(!r||!r.diameter||!r.height)return null;return volume(Number($('diameter').value),Number($('height').value))/volume(Number(r.diameter),Number(r.height))}
-function renderCalc(){const r=recipes[current],f=factor();$('baseType').textContent=types[current].replace('Massa de noiva ','');$('tableHeading').textContent=types[current];if(!r||!f){$('massResult').innerHTML='— <small>g</small>';$('resultCaption').textContent='Adiciona e guarda a receita-base deste tipo de massa.';$('factor').textContent='—';$('baseSize').textContent='—';renderTables();return}const hasMass=Number(r.mass)>0;const total=hasMass?Number(r.mass)*f:null;$('massResult').innerHTML=hasMass?fmt(total)+' <small>g</small>':'Ingredientes registados';$('resultCaption').textContent=hasMass?'Para forma de '+$('diameter').value+' cm × '+$('height').value+' cm · '+fmt(total/1000,2)+' kg':'Base: forma 20 × 12 cm. Quantidades dos ingredientes calculadas proporcionalmente.';$('factor').textContent=fmt(f,3)+'×';$('baseSize').textContent=r.diameter+' × '+r.height+' cm';renderTables()}
+function factor(){const r=recipes[current];if(!r||!r.diameter||!r.height)return null;const base=r.baseVolume||(r.baseVolume||volume(Number(r.diameter),Number(r.height)));return volume(Number($('diameter').value),Number($('height').value))/base}
+function renderCalc(){const r=recipes[current],f=factor();$('baseType').textContent=types[current].replace('Massa de noiva ','');$('tableHeading').textContent=types[current];if(!r||!f){$('massResult').innerHTML='— <small>g</small>';$('resultCaption').textContent='Adiciona e guarda a receita-base deste tipo de massa.';$('factor').textContent='—';$('baseSize').textContent='—';renderTables();return}const hasMass=Number(r.mass)>0;const total=hasMass?Number(r.mass)*f:null;$('massResult').innerHTML=hasMass?fmt(total)+' <small>g</small>':'Ingredientes registados';$('resultCaption').textContent=hasMass?'Para forma de '+$('diameter').value+' cm × '+$('height').value+' cm · '+fmt(total/1000,2)+' kg':'Base: forma 20 × 12 cm. Quantidades dos ingredientes calculadas proporcionalmente.';$('factor').textContent=fmt(f,3)+'×';$('baseSize').textContent=r.baseLabel||r.diameter+' × '+r.height+' cm';renderTables()}
 function renderTables(){const r=recipes[current],f=factor();if(!r||!f){$('ingredientResults').innerHTML='<tr><td colspan="4" class="empty">Guarda uma receita-base para visualizar os ingredientes.</td></tr>';$('diameterResults').innerHTML=diameters.map(d=>'<tr><td>'+d+' cm</td><td>'+$('height').value+' cm</td><td>'+fmt(volume(d,Number($('height').value))/1000,2)+' L</td><td>—</td></tr>').join('');$('tableStatus').textContent='Falta guardar a receita-base de '+types[current].toLowerCase()+'.';$('tablePill').textContent='Sem dados';return}
 $('ingredientResults').innerHTML=(r.items||[]).filter(x=>x.name&&Number(x.amount)>0).map(x=>{const amount=Number(x.amount)*f;return '<tr><td>'+escapeHtml(x.name)+'</td><td>'+fmt(x.amount)+' '+escapeHtml(x.unit)+'</td><td>'+fmt(f,3)+'×</td><td class="qty">'+fmt(Math.round(amount))+' '+escapeHtml(x.unit)+'</td></tr>'}).join('')||'<tr><td colspan="4" class="empty">Não foram adicionados ingredientes a esta receita.</td></tr>';
 $('diameterResults').innerHTML=diameters.map(d=>{const v=volume(d,Number($('height').value)),m=Number(r.mass)>0?Number(r.mass)*v/volume(Number(r.diameter),Number(r.height)):null;return '<tr><td>'+d+' cm</td><td>'+$('height').value+' cm</td><td>'+fmt(v/1000,2)+' L</td><td class="qty">'+(m===null?'—':fmt(m)+' g')+'</td></tr>'}).join('');
@@ -121,8 +140,8 @@ async function shareRecipe(){
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function addIngredient(item={name:'',amount:'',unit:'g'}){const row=document.createElement('div');row.className='ingredient-row';row.innerHTML='<div class="field iname"><label>INGREDIENTE</label><input class="inameInput" placeholder="Ex.: Farinha de trigo" value="'+escapeHtml(item.name)+'"></div><div class="field"><label>QUANTIDADE</label><input class="amountInput" type="number" min="0" step="any" placeholder="Ex.: 500" value="'+(item.amount??'')+'"></div><div class="field"><label>UNIDADE</label><select class="unitInput">'+['g','kg','ml','L','unidade','colher','chávena'].map(u=>'<option '+(u===item.unit?'selected':'')+'>'+u+'</option>').join('')+'</select></div><button class="btn danger remove" type="button" aria-label="Remover ingrediente">×</button>';row.querySelector('.remove').addEventListener('click',()=>row.remove());$('ingredients').appendChild(row)}
-function loadEditor(){const r=recipes[$('recipeType').value]||{};$('recipeDiameter').value=r.diameter||20;$('recipeHeight').value=r.height||15;$('recipeMass').value=r.mass||'';$('zeroRecipeNotes').style.display=$('recipeType').value==='zero'?'block':'none';$('ingredients').innerHTML='';(r.items||[]).forEach(addIngredient);if(!(r.items||[]).length)addIngredient();$('saveStatus').textContent='A editar: '+types[$('recipeType').value]+'.'}
-function save(){const type=$('recipeType').value,items=[...$('ingredients').querySelectorAll('.ingredient-row')].map(row=>({name:row.querySelector('.inameInput').value.trim(),amount:Number(row.querySelector('.amountInput').value),unit:row.querySelector('.unitInput').value})).filter(x=>x.name&&x.amount>0),mass=Number($('recipeMass').value);if(!(mass>0)){ $('saveStatus').textContent='Introduz o peso total da massa crua da receita-base para activar também o cálculo do peso total.';return}if(!items.length){$('saveStatus').textContent='Adiciona pelo menos um ingrediente com quantidade.';return}recipes[type]={...(recipes[type]||{}),diameter:Number($('recipeDiameter').value),height:Number($('recipeHeight').value),mass,items};try{localStorage.setItem('massasNoivaProRecipes',JSON.stringify(recipes));$('saveStatus').textContent='Receita guardada com sucesso neste dispositivo.'}catch(e){$('saveStatus').textContent='Não foi possível guardar neste navegador.'}renderCalc()}
+function loadEditor(){const r=recipes[$('recipeType').value]||{};$('recipeDiameter').value=r.diameter||20;$('recipeHeight').value=r.height||15;$('recipeMass').value=r.mass||'';$('zeroRecipeNotes').style.display=$('recipeType').value==='zero'?'block':'none';$('beerRecipeNotes').style.display=$('recipeType').value==='beer'?'block':'none';$('ingredients').innerHTML='';(r.items||[]).forEach(addIngredient);if(!(r.items||[]).length)addIngredient();$('saveStatus').textContent='A editar: '+types[$('recipeType').value]+'.'}
+function save(){const type=$('recipeType').value,items=[...$('ingredients').querySelectorAll('.ingredient-row')].map(row=>({name:row.querySelector('.inameInput').value.trim(),amount:Number(row.querySelector('.amountInput').value),unit:row.querySelector('.unitInput').value})).filter(x=>x.name&&x.amount>0),mass=Number($('recipeMass').value);if(!items.length){$('saveStatus').textContent='Adiciona pelo menos um ingrediente com quantidade.';return}recipes[type]={...(recipes[type]||{}),diameter:Number($('recipeDiameter').value),height:Number($('recipeHeight').value),mass:mass>0?mass:null,items};try{localStorage.setItem('massasNoivaProRecipes',JSON.stringify(recipes));$('saveStatus').textContent='Receita guardada com sucesso neste dispositivo.'}catch(e){$('saveStatus').textContent='Não foi possível guardar neste navegador.'}renderCalc()}
 document.querySelectorAll('.type').forEach(b=>b.addEventListener('click',()=>{current=b.dataset.type;document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x===b));$('recipeType').value=current;loadEditor();renderCalc()}));
 $('recipeType').addEventListener('change',()=>{current=$('recipeType').value;document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x.dataset.type===current));loadEditor();renderCalc()});
 $('diameter').addEventListener('change',renderCalc);$('height').addEventListener('change',renderCalc);$('addIngredient').addEventListener('click',()=>addIngredient());$('saveRecipe').addEventListener('click',save);
