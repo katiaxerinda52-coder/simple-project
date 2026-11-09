@@ -63,7 +63,7 @@ main{padding:0 18px;margin-top:-34px;margin-bottom:60px}.section{margin-bottom:2
 <div class="tablewrap"><table><thead><tr><th>Ingrediente</th><th>Quantidade original</th><th>Factor</th><th>Quantidade calculada</th></tr></thead><tbody id="ingredientResults"><tr><td colspan="4" class="empty">Guarda uma receita-base para visualizar os ingredientes.</td></tr></tbody></table></div>
 <div class="tabletitle">Resumo de massa por diâmetro<small>Para a altura actualmente seleccionada.</small></div>
 <div class="tablewrap"><table><thead><tr><th>Diâmetro</th><th>Altura</th><th>Volume aproximado</th><th>Massa necessária</th></tr></thead><tbody id="diameterResults"></tbody></table></div>
-<div style="padding:0 22px 20px"><button class="btn secondary" id="print" type="button">Imprimir / Guardar PDF</button></div>
+<div style="padding:0 22px 20px"><div class="actions"><button class="btn primary" id="shareRecipe" type="button">Partilhar receita completa</button><button class="btn secondary" id="print" type="button">Imprimir / Guardar PDF</button></div></div>
 </div></section>
 </main>
 <footer class="foot">Massas de Noiva Pro · Uma ferramenta de precisão para confeiteiras</footer>
@@ -93,9 +93,32 @@ function volume(d,h){return Math.PI*(d/2)**2*h}
 function factor(){const r=recipes[current];if(!r||!r.diameter||!r.height)return null;return volume(Number($('diameter').value),Number($('height').value))/volume(Number(r.diameter),Number(r.height))}
 function renderCalc(){const r=recipes[current],f=factor();$('baseType').textContent=types[current].replace('Massa de noiva ','');$('tableHeading').textContent=types[current];if(!r||!f){$('massResult').innerHTML='— <small>g</small>';$('resultCaption').textContent='Adiciona e guarda a receita-base deste tipo de massa.';$('factor').textContent='—';$('baseSize').textContent='—';renderTables();return}const hasMass=Number(r.mass)>0;const total=hasMass?Number(r.mass)*f:null;$('massResult').innerHTML=hasMass?fmt(total)+' <small>g</small>':'Ingredientes registados';$('resultCaption').textContent=hasMass?'Para forma de '+$('diameter').value+' cm × '+$('height').value+' cm · '+fmt(total/1000,2)+' kg':'Base: forma 20 × 12 cm. Quantidades dos ingredientes calculadas proporcionalmente.';$('factor').textContent=fmt(f,3)+'×';$('baseSize').textContent=r.diameter+' × '+r.height+' cm';renderTables()}
 function renderTables(){const r=recipes[current],f=factor();if(!r||!f){$('ingredientResults').innerHTML='<tr><td colspan="4" class="empty">Guarda uma receita-base para visualizar os ingredientes.</td></tr>';$('diameterResults').innerHTML=diameters.map(d=>'<tr><td>'+d+' cm</td><td>'+$('height').value+' cm</td><td>'+fmt(volume(d,Number($('height').value))/1000,2)+' L</td><td>—</td></tr>').join('');$('tableStatus').textContent='Falta guardar a receita-base de '+types[current].toLowerCase()+'.';$('tablePill').textContent='Sem dados';return}
-$('ingredientResults').innerHTML=(r.items||[]).filter(x=>x.name&&Number(x.amount)>0).map(x=>{const amount=Number(x.amount)*f;return '<tr><td>'+escapeHtml(x.name)+'</td><td>'+fmt(x.amount)+' '+escapeHtml(x.unit)+'</td><td>'+fmt(f,3)+'×</td><td class="qty">'+fmt(amount,amount<10?2:1)+' '+escapeHtml(x.unit)+'</td></tr>'}).join('')||'<tr><td colspan="4" class="empty">Não foram adicionados ingredientes a esta receita.</td></tr>';
+$('ingredientResults').innerHTML=(r.items||[]).filter(x=>x.name&&Number(x.amount)>0).map(x=>{const amount=Number(x.amount)*f;return '<tr><td>'+escapeHtml(x.name)+'</td><td>'+fmt(x.amount)+' '+escapeHtml(x.unit)+'</td><td>'+fmt(f,3)+'×</td><td class="qty">'+fmt(Math.round(amount))+' '+escapeHtml(x.unit)+'</td></tr>'}).join('')||'<tr><td colspan="4" class="empty">Não foram adicionados ingredientes a esta receita.</td></tr>';
 $('diameterResults').innerHTML=diameters.map(d=>{const v=volume(d,Number($('height').value)),m=Number(r.mass)>0?Number(r.mass)*v/volume(Number(r.diameter),Number(r.height)):null;return '<tr><td>'+d+' cm</td><td>'+$('height').value+' cm</td><td>'+fmt(v/1000,2)+' L</td><td class="qty">'+(m===null?'—':fmt(m)+' g')+'</td></tr>'}).join('');
 $('tableStatus').textContent=types[current]+' · base '+r.diameter+' cm × '+r.height+' cm'+(Number(r.mass)>0?' · '+fmt(r.mass)+' g':' · peso total da massa por definir');$('tablePill').textContent='Cálculo activo'}
+async function shareRecipe(){
+ const r=recipes[current],f=factor();
+ if(!r||!f){$('saveStatus').textContent='Guarda primeiro uma receita-base para poderes partilhar.';return}
+ const d=$('diameter').value,h=$('height').value;
+ const lines=[types[current].toUpperCase(),'','Forma: '+d+' cm × '+h+' cm','Factor de ajuste: '+fmt(f,3)+'×',''];
+ if(Number(r.mass)>0)lines.push('Massa crua estimada: '+fmt(Math.round(Number(r.mass)*f))+' g','');
+ lines.push('INGREDIENTES');
+ (r.items||[]).filter(x=>x.name&&Number(x.amount)>0).forEach(x=>lines.push('• '+x.name+': '+fmt(Math.round(Number(x.amount)*f))+' '+x.unit));
+ if(r.preparation){lines.push('','MODO DE PREPARO',r.preparation.method||'');}
+ if(r.notes)lines.push('','NOTAS',r.notes);
+ lines.push('','Massas de Noiva Pro');
+ const content=lines.join('\\n');
+ try{
+   const file=new File([content], 'receita-massa-de-noiva.txt',{type:'text/plain'});
+   if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+     await navigator.share({title:types[current],text:'Receita completa calculada no Massas de Noiva Pro.',files:[file]});
+   }else{
+     const url=URL.createObjectURL(new Blob([content],{type:'text/plain;charset=utf-8'}));
+     const a=document.createElement('a');a.href=url;a.download='receita-massa-de-noiva.txt';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+     $('saveStatus').textContent='Ficheiro completo descarregado. Anexa-o à conversa do WhatsApp.';
+   }
+ }catch(err){if(err.name!=='AbortError')$('saveStatus').textContent='Não foi possível abrir a partilha. Tenta usar Imprimir / Guardar PDF.'}
+}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function addIngredient(item={name:'',amount:'',unit:'g'}){const row=document.createElement('div');row.className='ingredient-row';row.innerHTML='<div class="field iname"><label>INGREDIENTE</label><input class="inameInput" placeholder="Ex.: Farinha de trigo" value="'+escapeHtml(item.name)+'"></div><div class="field"><label>QUANTIDADE</label><input class="amountInput" type="number" min="0" step="any" placeholder="Ex.: 500" value="'+(item.amount??'')+'"></div><div class="field"><label>UNIDADE</label><select class="unitInput">'+['g','kg','ml','L','unidade','colher','chávena'].map(u=>'<option '+(u===item.unit?'selected':'')+'>'+u+'</option>').join('')+'</select></div><button class="btn danger remove" type="button" aria-label="Remover ingrediente">×</button>';row.querySelector('.remove').addEventListener('click',()=>row.remove());$('ingredients').appendChild(row)}
 function loadEditor(){const r=recipes[$('recipeType').value]||{};$('recipeDiameter').value=r.diameter||20;$('recipeHeight').value=r.height||15;$('recipeMass').value=r.mass||'';$('zeroRecipeNotes').style.display=$('recipeType').value==='zero'?'block':'none';$('ingredients').innerHTML='';(r.items||[]).forEach(addIngredient);if(!(r.items||[]).length)addIngredient();$('saveStatus').textContent='A editar: '+types[$('recipeType').value]+'.'}
@@ -104,7 +127,7 @@ document.querySelectorAll('.type').forEach(b=>b.addEventListener('click',()=>{cu
 $('recipeType').addEventListener('change',()=>{current=$('recipeType').value;document.querySelectorAll('.type').forEach(x=>x.classList.toggle('active',x.dataset.type===current));loadEditor();renderCalc()});
 $('diameter').addEventListener('change',renderCalc);$('height').addEventListener('change',renderCalc);$('addIngredient').addEventListener('click',()=>addIngredient());$('saveRecipe').addEventListener('click',save);
 $('clearRecipe').addEventListener('click',()=>{$('recipeMass').value='';$('ingredients').innerHTML='';addIngredient();$('saveStatus').textContent='Campos limpos. A receita anteriormente guardada permanece disponível até guardares uma nova.'});
-$('print').addEventListener('click',()=>window.print());
+$('print').addEventListener('click',()=>window.print());$('shareRecipe').addEventListener('click',shareRecipe);
 loadEditor();renderCalc();
 </script>
 <style>@media print{.hero,.nav,.actions,#addIngredient,#clearRecipe,#saveRecipe,#print,.typebar{display:none!important}body{background:#fff}main{margin:0;max-width:none}.card,.wedding{box-shadow:none;break-inside:avoid}}</style>
