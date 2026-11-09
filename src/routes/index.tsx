@@ -45,7 +45,7 @@ function Index() {
     ? scaleRecipeByReferenceVolume(selectedRecipe.batterIngredients, selectedRecipe.calibration.referencePans, targetPans)
     : null;
   const formatQuantity = (quantity: number, unit: string) => {
-    const rounded = Number(quantity.toFixed(unit === "g" ? 1 : 2));
+    const rounded = Math.round(quantity);
     return unit === "g" ? `${rounded.toLocaleString("pt-PT")} g` : `${rounded.toLocaleString("pt-PT")} ${unit}`;
   };
 
@@ -79,11 +79,15 @@ function Index() {
           <p>Calcule a quantidade de massa e organize os ingredientes para produzir bolos de noiva com confiança.</p>
           <div className="hero-note"><span className="hero-note-icon"><Check size={14} /></span> Cálculos pensados para a realidade da confeitaria profissional</div>
         </div>
-        <div className="hero-art" aria-hidden="true">
-          <div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" />
-          <div className="cake-illustration"><div className="cake-top" /><div className="cake-tier tier-top" /><div className="cake-tier tier-middle" /><div className="cake-tier tier-bottom" /><div className="cake-plate" /></div>
-          <span className="art-spark spark-a">✦</span><span className="art-spark spark-b">✧</span>
-          <div className="art-caption">FEITO PARA CONFEITEIRAS</div>
+        <div className="hero-art" aria-label="Bolos de casamento decorados com ganache branca">
+          <figure className="hero-cake-photo hero-cake-two">
+            <img src="https://cdn.shopify.com/s/files/1/0512/8378/7930/products/photo1675831878-2_1200x1200.jpg?v=1675860924" alt="Bolo de casamento de dois andares com ganache branca e flores delicadas" />
+            <figcaption>DOIS ANDARES</figcaption>
+          </figure>
+          <figure className="hero-cake-photo hero-cake-three">
+            <img src="https://images.squarespace-cdn.com/content/v1/63842cad3e5d2745881b4390/2d8fbc69-e687-465f-a5d7-b900686f103e/image2.jpg?format=2500w" alt="Bolo de casamento de três andares com ganache branca e flores elegantes" />
+            <figcaption>TRÊS ANDARES</figcaption>
+          </figure>
         </div>
       </section>
 
@@ -145,7 +149,7 @@ function Index() {
           <div className="result-tabs">{[["ingredients","Ingredientes"],["distribution","Distribuição"],["method","Preparo"]].map(([id,label]) => <button key={id} className={activeTab === id ? "active" : ""} onClick={() => setActiveTab(id)}>{label}</button>)}</div>
           {scaledResult ? <div className="recipe-results">
             {activeTab === "ingredients" && <div className="ingredient-result">
-              <div className="calculation-note"><strong>Receita completa para preparar de uma só vez</strong><span>Factor de escala: {scaledResult.factor.toFixed(3)}× · Base: 20 × 12 cm + 14 × 13 cm</span></div>
+              <div className="calculation-note"><strong>Quantidades calculadas para as formas seleccionadas</strong><span>Apresentamos apenas a receita já ajustada.</span></div>
               <h4 className="ingredient-section-title">Ingredientes da massa</h4>
               <div className="ingredient-list">{scaledResult.ingredients.map((ingredient) => <div className="ingredient-line" key={ingredient.name}><span><strong>{ingredient.name}</strong>{ingredient.note && <small>{ingredient.note}</small>}</span><b>{formatQuantity(ingredient.totalQuantity, ingredient.unit)}</b></div>)}</div>
               {selectedRecipe.components.length > 0 && <><h4 className="ingredient-section-title">Preparações prévias</h4>{selectedRecipe.components.map((component) => <div className="component-ingredient-group" key={component.name}><strong>{component.name}</strong><div className="ingredient-list">{component.ingredients.map((ingredient) => <div className="ingredient-line" key={ingredient.name}><span><strong>{ingredient.name}</strong>{ingredient.note && <small>{ingredient.note}</small>}</span><b>{formatQuantity(ingredient.quantity * scaledResult.factor, ingredient.unit)}</b></div>)}</div></div>)}</>}
@@ -155,7 +159,7 @@ function Index() {
               {targetPans.map((pan) => {
                 const volume = Math.PI * Math.pow(pan.diameterCm / 2, 2) * pan.heightCm;
                 const share = volume / scaledResult.targetVolumeCm3;
-                return <div className="distribution-line" key={pan.id}><span><strong>{mode === "single" ? "Forma seleccionada" : `Andar / forma ${pan.id}`}</strong><small>{pan.diameterCm} cm × {pan.heightCm} cm</small></span><b>{(share * 100).toFixed(1)}% da massa total</b></div>;
+                return <div className="distribution-line" key={pan.id}><span><strong>{mode === "single" ? "Forma seleccionada" : `Andar / forma ${pan.id}`}</strong><small>{pan.diameterCm} cm × {pan.heightCm} cm</small></span><b>{Math.round(share * 100)}% da massa total</b></div>;
               })}
               <div className="distribution-total"><span>Distribuição total</span><strong>100%</strong></div>
               <h4 className="ingredient-section-title">Ingredientes estimados por forma</h4>
