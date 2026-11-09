@@ -54,6 +54,13 @@ main{padding:0 18px;margin-top:-34px;margin-bottom:60px}.section{margin-bottom:2
 <div class="divider"></div><strong>Modo de preparo da massa</strong><p>Bater a manteiga com o açúcar até obter uma mistura cremosa. Acrescentar os ovos um a um, depois a calda de caramelo preparada e a essência. Juntar metade da farinha e mexer delicadamente; acrescentar a outra metade e o fermento. Por fim, incorporar a uva passa, as cerejas picadas, a canela e o gengibre. Misturar e distribuir pelas formas.</p>
 <strong>Rendimento de referência</strong><p>Uma forma redonda de 20 cm × 12 cm ou uma forma de 22 cm × 10 cm.</p>
 </div>
+<div id="beerRecipeNotes" class="note" style="display:none;margin-top:18px">
+<strong>Modo de preparo — Massa de Noiva com Cerveja Preta</strong>
+<p>Numa bacia, coloque a manteiga e o açúcar e bata até esbranquiçar. Acrescente os ovos um a um, batendo após cada adição. De seguida, junte a calda de açúcar queimado, a cerveja preta e metade da farinha; mexa com um fouet ou colher de pau.</p>
+<p>Acrescente as essências, as raspas de laranja, o mix spice, o gengibre, o restante da farinha e o fermento Royal. Mexa até obter uma massa uniforme. Incorpore a uva passa, a fruta cristalizada, as cerejas, as amêndoas e as nozes. Misture bem e distribua a massa pelas formas.</p>
+<p>Depois de o bolo estar pronto e ainda quente, regue-o com a calda das frutas demolhadas. Sem retirar o bolo da forma, envolva a forma em papel aderente e deixe descansar por 24 horas.</p>
+<div class="divider"></div><strong>Rendimento de referência</strong><p>Duas formas: 20 cm × 13 cm e 14 cm × 13 cm.</p>
+</div>
 <div class="actions"><button class="btn primary" id="saveRecipe" type="button">Guardar receita-base</button><button class="btn secondary" id="clearRecipe" type="button">Limpar campos</button></div>
 <p id="saveStatus" style="font-size:10px;color:var(--muted);margin:10px 0 0" aria-live="polite">As receitas ficam guardadas neste dispositivo e navegador.</p>
 </div></section>
@@ -88,7 +95,7 @@ const receitaCervejaBase={diameter:20,height:13,mass:null,baseVolume:volume(20,1
 {name:'Amêndoa laminada ou amendoim',amount:100,unit:'g'},
 {name:'Nozes picadas',amount:100,unit:'g'},
 {name:'Fermento Royal',amount:60,unit:'g'}
-],notes:'Rendimento de referência: duas formas, uma de 20 cm de diâmetro e outra de 14 cm de diâmetro, ambas com 13 cm de altura. A calda de caramelo é preparada apenas com água e açúcar. A receita ainda não inclui modo de preparo detalhado.'};
+],preparation:{method:'Numa bacia, coloque a manteiga e o açúcar e bata até esbranquiçar. Acrescente os ovos um a um, batendo após cada adição. De seguida, junte a calda de açúcar queimado, a cerveja preta e metade da farinha; mexa com um fouet ou colher de pau. Acrescente as essências, as raspas de laranja, o mix spice, o gengibre, o restante da farinha e o fermento Royal. Mexa até obter uma massa uniforme. Incorpore a uva passa, a fruta cristalizada, as cerejas, as amêndoas e as nozes. Misture bem e distribua a massa pelas formas.\n\nDepois de o bolo estar pronto e ainda quente, regue-o com a calda das frutas demolhadas. Sem retirar o bolo da forma, envolva a forma em papel aderente e deixe descansar por 24 horas.'},notes:'Rendimento de referência: duas formas, uma de 20 cm de diâmetro e outra de 14 cm de diâmetro, ambas com 13 cm de altura. A calda de caramelo é preparada apenas com água e açúcar.'};
 const receitaZeroBase={diameter:20,height:12,mass:null,items:[
 {name:'Calda de caramelo preparada (utilizada na massa)',amount:255,unit:'g'},
 {name:'Manteiga',amount:360,unit:'g'},
@@ -126,7 +133,7 @@ async function shareRecipe(){
  if(r.preparation){lines.push('','MODO DE PREPARO',r.preparation.method||'');}
  if(r.notes)lines.push('','NOTAS',r.notes);
  lines.push('','Massas de Noiva Pro');
- const content=lines.join('\\n');
+ const content=lines.join('\n');
  try{
    const file=new File([content], 'receita-massa-de-noiva.txt',{type:'text/plain'});
    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
