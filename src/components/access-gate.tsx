@@ -56,6 +56,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    let firstCheck = true;
     if (!session) {
       setAuthorized(false);
       setAdmin(false);
@@ -63,22 +64,38 @@ export function AccessGate({ children }: { children: ReactNode }) {
       return;
     }
     setChecking(true);
-    Promise.all([
-      supabase.rpc("is_app_authorized"),
-      supabase.rpc("is_app_admin"),
-    ]).then(([accessResult, adminResult]) => {
-      if (!active) return;
-      setAuthorized(accessResult.data === true && !accessResult.error);
-      setAdmin(adminResult.data === true && !adminResult.error);
-      setChecking(false);
-    }).catch(() => {
-      if (active) {
-        setAuthorized(false);
-        setAdmin(false);
-        setChecking(false);
+    const verifyAccess = async () => {
+      try {
+        const [accessResult, adminResult] = await Promise.all([
+          supabase.rpc("is_app_authorized"),
+          supabase.rpc("is_app_admin"),
+        ]);
+        if (!active) return;
+        const canEnter = accessResult.data === true && !accessResult.error;
+        setAuthorized(canEnter);
+        setAdmin(adminResult.data === true && !adminResult.error);
+        if (!canEnter && !firstCheck) await supabase.auth.signOut();
+      } catch {
+        if (active) {
+          setAuthorized(false);
+          setAdmin(false);
+        }
+      } finally {
+        if (active && firstCheck) setChecking(false);
+        firstCheck = false;
       }
-    });
-    return () => { active = false; };
+    };
+    void verifyAccess();
+    const interval = window.setInterval(() => { void verifyAccess(); }, 60_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void verifyAccess();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [session]);
 
   const loadUsers = async () => {
