@@ -41,12 +41,18 @@ function Index() {
     let active = true;
     supabase.from("wedding_cake_recipes").select("id,recipe").then(({ data, error }) => {
       if (!active) return;
-      if (error || !data) {
+      if (error || !data || data.length !== 3) {
         setRecipeLoadError(true);
         return;
       }
       const mapped = Object.fromEntries(data.map((row) => [row.id, row.recipe as unknown as WeddingCakeRecipe])) as Record<"alcohol" | "without-alcohol" | "black-beer", WeddingCakeRecipe>;
+      if (!mapped.alcohol || !mapped["without-alcohol"] || !mapped["black-beer"]) {
+        setRecipeLoadError(true);
+        return;
+      }
       setRecipes(mapped);
+    }).catch(() => {
+      if (active) setRecipeLoadError(true);
     });
     return () => { active = false; };
   }, []);
