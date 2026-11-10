@@ -98,11 +98,6 @@ export type Enums<
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never;
 
-export type CompositeTypes<
-  PublicSchemaCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"] | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends (PublicSchemaCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
-    ? keyof DatabaseWithoutInternals[PublicSchemaCompositeNameOrOptions["schema"]]["CompositeTypes"]
-    : never) = never,
-> = never;
+export type CompositeTypes<T extends keyof Database["public"]["CompositeTypes"]> = Database["public"]["CompositeTypes"][T];
 
 export const Constants = { public: { Enums: {} } } as const;
