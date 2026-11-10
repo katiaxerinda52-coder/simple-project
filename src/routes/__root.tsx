@@ -124,8 +124,8 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <AccessGate><Outlet /></AccessGate> breaks all child routes. */}
-      <Outlet />
+      {/* All application routes require a verified, authorized Supabase session. */}
+      <AccessGate><Outlet /></AccessGate>
     </QueryClientProvider>
   );
 }
