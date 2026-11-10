@@ -9,6 +9,7 @@ type AuthorizedUser = { email: string; role: "admin" | "user"; active: boolean; 
 export function AccessGate({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(true);
+  const [configurationError, setConfigurationError] = useState(false);
   const [checking, setChecking] = useState(false);
   const [authorized, setAuthorized] = useState(false);
   const [admin, setAdmin] = useState(false);
@@ -24,19 +25,32 @@ export function AccessGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted) {
+    let unsubscribe = () => {};
+    try {
+      const auth = supabase.auth;
+      auth.getSession().then(({ data, error }) => {
+        if (!mounted) return;
+        if (error) setConfigurationError(true);
         setSession(data.session);
         setInitializing(false);
-      }
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
+      }).catch(() => {
+        if (mounted) {
+          setConfigurationError(true);
+          setInitializing(false);
+        }
+      });
+      const { data: { subscription } } = auth.onAuthStateChange((_event, nextSession) => {
+        setSession(nextSession);
+        setInitializing(false);
+      });
+      unsubscribe = () => subscription.unsubscribe();
+    } catch {
+      setConfigurationError(true);
       setInitializing(false);
-    });
+    }
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, []);
 
@@ -141,13 +155,17 @@ export function AccessGate({ children }: { children: ReactNode }) {
       setAdminMessage("O conteúdo da receita não é um JSON válido. Corrija antes de guardar.");
       return;
     }
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      setAdminMessage("A receita deve ser um objecto JSON.");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || (parsed as { id?: unknown }).id !== recipeId) {
+      setAdminMessage("A receita deve ser um objecto JSON e manter o identificador seleccionado.");
       return;
     }
     const { error } = await supabase.from("wedding_cake_recipes").update({ recipe: parsed }).eq("id", recipeId);
     setAdminMessage(error ? "Não foi possível guardar a receita." : "Receita actualizada com sucesso.");
   };
+
+  if (configurationError) {
+    return <div style={screenStyle}><div style={panelStyle}><strong>Configuração de acesso incompleta</strong><p style={mutedStyle}>O Supabase ainda não está configurado nesta publicação. Verifique as variáveis de ligação e a configuração do projecto.</p></div></div>;
+  }
 
   if (initializing || checking) {
     return <div style={screenStyle}><div style={panelStyle}><strong>Massas de Noiva Pro</strong><p>A verificar o acesso seguro…</p></div></div>;
