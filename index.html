@@ -138,26 +138,41 @@ function shareWeddingRecipe(){
  const factors=tiers.map(t=>volume(t.diameter,t.height)/base);
  const soakingItems=r.items.filter(item=>/demolh/i.test(item.name));
  const mainItems=r.items.filter(item=>!/demolh/i.test(item.name));
- const lines=['MASSAS DE NOIVA PRO',names[selectedType],'','FORMAS SELECCIONADAS:',...tiers.map((t,i)=>'Forma '+(i+1)+': '+t.diameter+' cm × '+fmt(t.height,0)+' cm')];
+ const lines=[
+  '*MASSAS DE NOIVA PRO*',
+  '*'+names[selectedType]+'*',
+  '',
+  '*FORMAS SELECCIONADAS*',
+  ...tiers.map((t,i)=>'• Forma '+(i+1)+': '+t.diameter+' cm × '+fmt(t.height,0)+' cm')
+ ];
  if(soakingItems.length){
-  lines.push('','INGREDIENTES DA DEMOLHADA — QUANTIDADE TOTAL:');
+  lines.push('','*INGREDIENTES PARA A DEMOLHADA*');
   soakingItems.forEach(item=>{
    const total=rounded(factors.reduce((sum,f)=>sum+item.amount*f,0),item.unit);
-   lines.push('• '+item.name+': '+fmtIngredient(total,item.unit)+' '+item.unit);
+   lines.push('• '+item.name+': *'+fmtIngredient(total,item.unit)+' '+item.unit+'*');
   });
  }
- lines.push('','INGREDIENTES DA MASSA — QUANTIDADE TOTAL:');
+ lines.push('','*INGREDIENTES DA MASSA*');
  mainItems.forEach(item=>{
   const total=rounded(factors.reduce((sum,f)=>sum+item.amount*f,0),item.unit);
-  lines.push('• '+item.name+': '+fmtIngredient(total,item.unit)+' '+item.unit);
+  lines.push('• '+item.name+': *'+fmtIngredient(total,item.unit)+' '+item.unit+'*');
  });
- if(r.soakingMethod){lines.push('','PREPARAÇÃO DA DEMOLHADA:',r.soakingMethod)}
- if(r.caramel?.length||r.caramelMethod){lines.push('','CALDA DE CARAMELO:',...(r.caramel||[]).map(x=>'• '+x));if(r.caramelMethod)lines.push(r.caramelMethod)}
- if(r.sauce?.length||r.sauceMethod){lines.push('','CALDA / PREPARAÇÃO COMPLEMENTAR:',...(r.sauce||[]).map(x=>'• '+x));if(r.sauceMethod)lines.push(r.sauceMethod)}
- if(r.method)lines.push('','MODO DE PREPARAÇÃO:',r.method);
- if(r.notes)lines.push('','NOTAS IMPORTANTES:',r.notes);
- lines.push('','Quantidades proporcionais calculadas por volume. Confirma o rendimento real da tua receita.');
- const url='https://wa.me/?text='+encodeURIComponent(lines.join('\\n'));
+ if(r.soakingMethod)lines.push('','*PREPARAÇÃO DA DEMOLHADA*',r.soakingMethod);
+ if(r.caramel?.length||r.caramelMethod){
+  lines.push('','*CALDA DE CARAMELO*');
+  (r.caramel||[]).forEach(x=>lines.push('• '+x));
+  if(r.caramelMethod)lines.push(r.caramelMethod);
+ }
+ if(r.sauce?.length||r.sauceMethod){
+  lines.push('','*PREPARAÇÃO COMPLEMENTAR*');
+  (r.sauce||[]).forEach(x=>lines.push('• '+x));
+  if(r.sauceMethod)lines.push(r.sauceMethod);
+ }
+ if(r.method)lines.push('','*MODO DE PREPARAÇÃO*',r.method);
+ if(r.notes)lines.push('','*NOTAS IMPORTANTES*',r.notes);
+ lines.push('','_Quantidades calculadas proporcionalmente ao volume das formas seleccionadas._');
+ const message=lines.join('\n');
+ const url='https://wa.me/?text='+encodeURIComponent(message);
  window.open(url,'_blank','noopener,noreferrer');
 }
 $('shareWedding').onclick=shareWeddingRecipe;
