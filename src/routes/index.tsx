@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, CakeSlice, Check, ChevronDown, CircleHelp, FileDown, Layers3, Minus, Plus, Printer, Sparkles } from "lucide-react";
-import { weddingCakeRecipes } from "../data/wedding-cake-recipes";
+import type { WeddingCakeRecipe } from "../data/wedding-cake-recipes";
+import { supabase } from "../integrations/supabase/client";
 import { scaleRecipeByReferenceVolume } from "../data/recipe-scaling";
 
 export const Route = createFileRoute("/")({
@@ -34,10 +35,28 @@ function Index() {
   ]);
   const [calculated, setCalculated] = useState(false);
   const [activeTab, setActiveTab] = useState("ingredients");
+  const [recipes, setRecipes] = useState<Record<"alcohol" | "without-alcohol" | "black-beer", WeddingCakeRecipe> | null>(null);
+  const [recipeLoadError, setRecipeLoadError] = useState(false);
+  useEffect(() => {
+    let active = true;
+    supabase.from("wedding_cake_recipes").select("id,recipe").then(({ data, error }) => {
+      if (!active) return;
+      if (error || !data) {
+        setRecipeLoadError(true);
+        return;
+      }
+      const mapped = Object.fromEntries(data.map((row) => [row.id, row.recipe as unknown as WeddingCakeRecipe])) as Record<"alcohol" | "without-alcohol" | "black-beer", WeddingCakeRecipe>;
+      setRecipes(mapped);
+    });
+    return () => { active = false; };
+  }, []);
   const selectedDough = doughs.find((item) => item.id === dough) ?? doughs[1];
   const diameterOptions = useMemo(() => Array.from({ length: 26 }, (_, i) => i + 10), []);
-  const recipeKey: keyof typeof weddingCakeRecipes = dough === "alcohol" ? "alcohol" : dough === "without" ? "without-alcohol" : "black-beer";
-  const selectedRecipe = weddingCakeRecipes[recipeKey];
+  if (!recipes) {
+    return <main className="app-shell"><section className="workspace"><div className="calculator-card"><h2>{recipeLoadError ? "Não foi possível carregar as receitas." : "A carregar as receitas protegidas…"}</h2><p>{recipeLoadError ? "Confirme se a migração de segurança foi aplicada no Supabase e tente novamente." : "Aguarde um momento."}</p></div></section></main>;
+  }
+  const recipeKey: keyof typeof recipes = dough === "alcohol" ? "alcohol" : dough === "without" ? "without-alcohol" : "black-beer";
+  const selectedRecipe = recipes[recipeKey];
   const targetPans = mode === "single"
     ? [{ id: 1, diameterCm: diameter, heightCm: height }]
     : floors.map((floor) => ({ id: floor.id, diameterCm: floor.diameter, heightCm: floor.height }));
