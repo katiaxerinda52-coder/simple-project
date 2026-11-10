@@ -55,13 +55,9 @@ footer{background:#102f24;color:#d5e3d8;padding:35px 0}.footer-grid{display:grid
 <div class="field full"><label>Formas do bolo · individual ou vários andares</label><div id="wDiameters" class="tier-list"></div><button class="btn btn-soft tier-add" id="addWeddingTier" type="button">+ Adicionar andar / forma</button><small class="sub">Define o diâmetro e a altura de cada forma. Podes usar qualquer altura e adicionar ou remover andares.</small></div>
 <div class="result"><small>Massa estimada / multiplicador</small><strong id="wResult">Aguardando receita-base</strong><div class="result-grid"><div><span>Factor</span><b id="wFactor">—</b></div><div><span>Referência</span><b id="wBase">—</b></div><div><span>Receita seleccionada</span><b id="wType">Com álcool</b></div></div></div>
 <div class="notice" id="wNotice">O cálculo por volume assume a mesma densidade e proporção de enchimento. Confirma sempre com o rendimento real da tua receita.</div>
+<div id="wSoakingPanel" style="display:none;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)"><h3>Ingredientes da demolhada</h3><p class="sub">Quantidades ajustadas automaticamente às formas e alturas seleccionadas.</p><div class="table-scroll"><table><thead id="wSoakingHead"></thead><tbody id="wSoakingBody"></tbody></table></div></div>
 <div class="table-scroll"><table><thead id="wIngredientsHead"><tr><th>Ingrediente</th><th>Receita-base</th><th>Calculado</th></tr></thead><tbody id="wIngredients"><tr><td colspan="3" class="empty">Selecciona as formas para calcular.</td></tr></tbody></table></div><p class="sub" id="wRoundingNote">As quantidades são arredondadas para medidas práticas de cozinha.</p>
 <div class="row-actions"><button class="btn btn-primary" id="shareWedding" type="button">Partilhar receita completa no WhatsApp</button><button class="btn btn-ghost" id="printWedding">Imprimir resultado</button><button class="btn btn-soft" id="resetWedding">Reiniciar selecção</button></div>
-</div>
-<div class="panel"><h3>Receitas-base protegidas</h3><p class="sub">As três receitas originais são mantidas como referência de cálculo. Não alteres as quantidades-base durante a utilização normal.</p>
-<div class="grid3"><div class="field"><label>Receita</label><select id="baseType"><option value="alcohol">Massa de noiva com álcool</option><option value="zero">Massa de noiva sem álcool</option><option value="beer">Massa de noiva com cerveja preta</option></select></div><div class="field"><label>Diâmetro base (cm)</label><input id="baseDiameter" type="number" min="1" value="20"></div><div class="field"><label>Altura base (cm)</label><input id="baseHeight" type="number" min="1" value="15"></div><div class="field"><label>Peso total da massa (g)</label><input id="baseMass" type="number" min="0" placeholder="Opcional"></div></div>
-<div id="baseRows"></div><div class="row-actions"><button class="btn btn-soft" id="addBaseRow">+ Ingrediente</button><button class="btn btn-primary" id="saveBase">Guardar receita-base</button><button class="btn btn-ghost" id="clearBase">Limpar editor</button></div><p class="sub" id="baseStatus" aria-live="polite">As receitas são guardadas apenas neste dispositivo.</p>
-<div class="notice">As três receitas-base já estão disponíveis para cálculo. Mantém os ingredientes e as quantidades originais; altera estes dados apenas quando estiveres a actualizar uma receita testada.</div>
 </div>
 </div>
 <div class="tool" id="tool-convert"><div class="panel"><h3>Conversor de medidas</h3><p class="sub">Conversões imediatas para medidas comuns de cozinha.</p><div class="grid3"><div class="field"><label>Valor</label><input id="cvValue" type="number" value="1" step="any"></div><div class="field"><label>Converter de</label><select id="cvFrom"><option value="g">Gramas (g)</option><option value="kg">Quilogramas (kg)</option><option value="ml">Mililitros (ml)</option><option value="l">Litros (L)</option><option value="cup">Chávenas (240 ml)</option><option value="tbsp">Colheres sopa (15 ml)</option><option value="tsp">Colheres chá (5 ml)</option><option value="c">Celsius (°C)</option><option value="f">Fahrenheit (°F)</option></select></div><div class="field"><label>Converter para</label><select id="cvTo"><option value="kg">Quilogramas (kg)</option><option value="g">Gramas (g)</option><option value="l">Litros (L)</option><option value="ml">Mililitros (ml)</option><option value="cup">Chávenas (240 ml)</option><option value="tbsp">Colheres sopa (15 ml)</option><option value="tsp">Colheres chá (5 ml)</option><option value="f">Fahrenheit (°F)</option><option value="c">Celsius (°C)</option></select></div></div><div class="result"><small>Resultado da conversão</small><strong id="cvResult">1 kg</strong><small id="cvExplain">A conversão de volume pressupõe água ou densidade equivalente.</small></div><div class="row-actions"><button class="btn btn-ghost" id="resetConvert">Limpar / Reiniciar</button></div><div class="notice">Chávenas e colheres são medidas de volume. A conversão para gramas depende da densidade do ingrediente e não é universal.</div></div></div>
@@ -99,32 +95,69 @@ function addWeddingTier(diameter=20,height=15){const row=document.createElement(
 function renumberWeddingTiers(){[...$('wDiameters').children].forEach((row,i)=>row.querySelector('.eyebrow-dark').textContent=''+(i+1))}
 function weddingTiers(){return [...$('wDiameters').querySelectorAll('.tier-row')].map(row=>({diameter:Number(row.querySelector('.tier-diameter').value),height:Number(row.querySelector('.tier-height').value)})).filter(t=>t.diameter>0&&t.height>0)}
 function wFactor(){const r=recipes[selectedType];if(!r||!r.diameter||!r.height)return null;const base=r.baseVolume||volume(Number(r.diameter),Number(r.height));return weddingTiers().reduce((sum,t)=>sum+volume(t.diameter,t.height)/base,0)}
-function renderWedding(){const r=recipes[selectedType],tiers=weddingTiers(),base=r?.baseVolume||((r?.diameter&&r?.height)?volume(Number(r.diameter),Number(r.height)):0);$('wType').textContent=names[selectedType].replace('Massa de noiva ','');if(!r||!r.items?.length||!base){$('wResult').textContent='Receita-base necessária';$('wFactor').textContent='—';$('wBase').textContent='—';$('wIngredients').innerHTML='<tr><td colspan="3" class="empty">A receita-base ainda não tem referência de forma e altura.</td></tr>';return}if(!tiers.length||tiers.length!==$('wDiameters').children.length){$('wResult').textContent='Verifica as dimensões';$('wFactor').textContent='—';$('wBase').textContent='Indica diâmetro e altura válidos em cada forma';$('wIngredients').innerHTML='<tr><td colspan="3" class="empty">Preenche as dimensões de todas as formas.</td></tr>';return}const factors=tiers.map(t=>volume(t.diameter,t.height)/base),totalFactor=factors.reduce((a,b)=>a+b,0);$('wFactor').textContent=fmt(totalFactor,3)+'×';$('wBase').textContent=r.baseLabel||('Forma-base: '+r.diameter+' cm × '+r.height+' cm');$('wResult').textContent=r.mass?fmt(rounded(r.mass*totalFactor,'g'),0)+' g':'Ingredientes calculados';$('wNotice').textContent='Cada andar é calculado separadamente pela proporção de volume da forma-base. Os valores apresentados são arredondados para medidas práticas; confirma o rendimento real da tua receita.';const header='<tr><th>Ingrediente</th>'+tiers.map((t,i)=>'<th>Andar '+(i+1)+'<br>'+t.diameter+' cm × '+fmt(t.height,1)+' cm</th>').join('')+'<th>Total</th></tr>';$('wIngredientsHead').innerHTML=header;$('wIngredients').innerHTML=r.items.map(item=>{const amounts=factors.map(f=>rounded(item.amount*f,item.unit));const total=rounded(amounts.reduce((a,b)=>a+b,0),item.unit);return '<tr><td>'+item.name+'<br><small>'+item.unit+'</small></td>'+amounts.map(a=>'<td>'+fmtIngredient(a,item.unit)+' '+item.unit+'</td>').join('')+'<td><strong>'+fmtIngredient(total,item.unit)+' '+item.unit+'</strong></td></tr>'}).join('')}
+function renderWedding(){
+ const r=recipes[selectedType],tiers=weddingTiers(),base=r?.baseVolume||((r?.diameter&&r?.height)?volume(Number(r.diameter),Number(r.height)):0);
+ $('wType').textContent=names[selectedType].replace('Massa de noiva ','');
+ if(!r||!r.items?.length||!base){
+  $('wResult').textContent='Receita-base necessária';$('wFactor').textContent='—';$('wBase').textContent='—';
+  $('wSoakingPanel').style.display='none';
+  $('wIngredients').innerHTML='<tr><td colspan="3" class="empty">A receita-base ainda não tem referência de forma e altura.</td></tr>';return
+ }
+ if(!tiers.length||tiers.length!==$('wDiameters').children.length){
+  $('wResult').textContent='Verifica as dimensões';$('wFactor').textContent='—';$('wBase').textContent='Indica diâmetro e altura válidos em cada forma';
+  $('wSoakingPanel').style.display='none';
+  $('wIngredients').innerHTML='<tr><td colspan="3" class="empty">Preenche as dimensões de todas as formas.</td></tr>';return
+ }
+ const factors=tiers.map(t=>volume(t.diameter,t.height)/base),totalFactor=factors.reduce((a,b)=>a+b,0);
+ $('wFactor').textContent=fmt(totalFactor,3)+'×';$('wBase').textContent=r.baseLabel||('Forma-base: '+r.diameter+' cm × '+r.height+' cm');
+ $('wResult').textContent=r.mass?fmt(rounded(r.mass*totalFactor,'g'),0)+' g':'Ingredientes calculados';
+ $('wNotice').textContent='Cada andar é calculado separadamente pela proporção de volume da forma-base. Os valores apresentados são arredondados para medidas práticas; confirma o rendimento real da tua receita.';
+ const soakingItems=r.items.filter(item=>/demolh/i.test(item.name));
+ const mainItems=r.items.filter(item=>!/demolh/i.test(item.name));
+ if(soakingItems.length){
+  $('wSoakingPanel').style.display='block';
+  $('wSoakingHead').innerHTML='<tr><th>Ingrediente</th>'+tiers.map((t,i)=>'<th>Forma '+(i+1)+'<br>'+t.diameter+' cm × '+fmt(t.height,1)+' cm</th>').join('')+'<th>Total</th></tr>';
+  $('wSoakingBody').innerHTML=soakingItems.map(item=>{
+   const amounts=factors.map(f=>rounded(item.amount*f,item.unit)),total=rounded(amounts.reduce((a,b)=>a+b,0),item.unit);
+   return '<tr><td>'+item.name+'<br><small>'+item.unit+'</small></td>'+amounts.map(a=>'<td>'+fmtIngredient(a,item.unit)+' '+item.unit+'</td>').join('')+'<td><strong>'+fmtIngredient(total,item.unit)+' '+item.unit+'</strong></td></tr>'
+  }).join('');
+ }else{$('wSoakingPanel').style.display='none';$('wSoakingHead').innerHTML='';$('wSoakingBody').innerHTML=''}
+ $('wIngredientsHead').innerHTML='<tr><th>Ingrediente</th>'+tiers.map((t,i)=>'<th>Forma '+(i+1)+'<br>'+t.diameter+' cm × '+fmt(t.height,1)+' cm</th>').join('')+'<th>Total</th></tr>';
+ $('wIngredients').innerHTML=mainItems.map(item=>{
+  const amounts=factors.map(f=>rounded(item.amount*f,item.unit)),total=rounded(amounts.reduce((a,b)=>a+b,0),item.unit);
+  return '<tr><td>'+item.name+'<br><small>'+item.unit+'</small></td>'+amounts.map(a=>'<td>'+fmtIngredient(a,item.unit)+' '+item.unit+'</td>').join('')+'<td><strong>'+fmtIngredient(total,item.unit)+' '+item.unit+'</strong></td></tr>'
+ }).join('')
+}
 $('weddingTypes').onclick=e=>{const b=e.target.closest('[data-type]');if(!b)return;selectedType=b.dataset.type;document.querySelectorAll('#weddingTypes .tab').forEach(x=>x.classList.toggle('active',x===b));renderWedding()};
 $('addWeddingTier').onclick=()=>addWeddingTier(20,15);addWeddingTier(20,15);
-function addRow(container,vals=['','', 'g']){const row=document.createElement('div');row.className='ingredient-row';row.innerHTML='<div class="field"><label>Ingrediente</label><input placeholder="Nome" value="'+vals[0]+'"></div><div class="field"><label>Quantidade</label><input type="number" min="0" step="any" placeholder="0" value="'+vals[1]+'"></div><div class="field"><label>Unidade</label><select>'+['g','kg','ml','L','unidade','colher de sopa','colher de chá','chávena'].map(x=>'<option '+(x===vals[2]?'selected':'')+'>'+x+'</option>').join('')+'</select></div><button class="btn btn-danger" type="button">Remover</button>';row.querySelector('button').onclick=()=>row.remove();$(container).appendChild(row)}
-function loadBaseEditor(){const r=recipes[$('baseType').value]||{};$('baseDiameter').value=r.diameter??'';$('baseHeight').value=r.height??'';$('baseMass').value=r.mass||'';$('baseRows').innerHTML='';(r.items||[]).forEach(x=>addRow('baseRows',[x.name,x.amount,x.unit]));if(!r.items?.length)addRow('baseRows')}
-$('baseType').onchange=loadBaseEditor;$('addBaseRow').onclick=()=>addRow('baseRows');$('clearBase').onclick=()=>{$('baseRows').innerHTML='';addRow('baseRows');$('baseMass').value='';$('baseStatus').textContent='Editor limpo. A receita guardada não foi apagada.'};
-$('saveBase').onclick=()=>{const items=[...$('baseRows').querySelectorAll('.ingredient-row')].map(x=>({name:x.querySelector('input').value.trim(),amount:Number(x.querySelectorAll('input')[1].value),unit:x.querySelector('select').value})).filter(x=>x.name&&x.amount>0);if(!items.length){$('baseStatus').textContent='Adiciona pelo menos um ingrediente com quantidade válida.';return}const id=$('baseType').value,diameter=Number($('baseDiameter').value),height=Number($('baseHeight').value);if(!(diameter>0&&height>0)){$('baseStatus').textContent='Indica o diâmetro e a altura reais da receita-base antes de guardar e activar a calculadora.';return}recipes[id]={...(recipes[id]||{}),diameter,height,mass:Number($('baseMass').value)||null,items};try{localStorage.setItem('mnpRecipes',JSON.stringify(recipes));$('baseStatus').textContent='Receita-base guardada neste dispositivo.';renderWedding();renderCards();toast('Receita-base guardada.')}catch(e){$('baseStatus').textContent='Não foi possível guardar no navegador.'}};
-$('addBaseRow').click();loadBaseEditor();renderWedding();
 function shareWeddingRecipe(){
  const r=recipes[selectedType],tiers=weddingTiers();
  if(!r||!r.items?.length||!tiers.length){toast('Calcula primeiro uma receita válida.');return}
  const base=r.baseVolume||volume(Number(r.diameter),Number(r.height));
  if(!(base>0)){toast('A receita-base precisa de uma forma de referência.');return}
  const factors=tiers.map(t=>volume(t.diameter,t.height)/base);
- const lines=['MASSAS DE NOIVA PRO',names[selectedType],'','FORMAS SELECCIONADAS:',...tiers.map((t,i)=>'Forma '+(i+1)+': '+t.diameter+' cm × '+fmt(t.height,0)+' cm'),'','INGREDIENTES — QUANTIDADE TOTAL:'];
- r.items.forEach(item=>{
+ const soakingItems=r.items.filter(item=>/demolh/i.test(item.name));
+ const mainItems=r.items.filter(item=>!/demolh/i.test(item.name));
+ const lines=['MASSAS DE NOIVA PRO',names[selectedType],'','FORMAS SELECCIONADAS:',...tiers.map((t,i)=>'Forma '+(i+1)+': '+t.diameter+' cm × '+fmt(t.height,0)+' cm')];
+ if(soakingItems.length){
+  lines.push('','INGREDIENTES DA DEMOLHADA — QUANTIDADE TOTAL:');
+  soakingItems.forEach(item=>{
+   const total=rounded(factors.reduce((sum,f)=>sum+item.amount*f,0),item.unit);
+   lines.push('• '+item.name+': '+fmtIngredient(total,item.unit)+' '+item.unit);
+  });
+ }
+ lines.push('','INGREDIENTES DA MASSA — QUANTIDADE TOTAL:');
+ mainItems.forEach(item=>{
   const total=rounded(factors.reduce((sum,f)=>sum+item.amount*f,0),item.unit);
   lines.push('• '+item.name+': '+fmtIngredient(total,item.unit)+' '+item.unit);
  });
- if(r.soakingMethod){lines.push('','DEMOLHA DAS FRUTAS:',r.soakingMethod)}
+ if(r.soakingMethod){lines.push('','PREPARAÇÃO DA DEMOLHADA:',r.soakingMethod)}
  if(r.caramel?.length||r.caramelMethod){lines.push('','CALDA DE CARAMELO:',...(r.caramel||[]).map(x=>'• '+x));if(r.caramelMethod)lines.push(r.caramelMethod)}
  if(r.sauce?.length||r.sauceMethod){lines.push('','CALDA / PREPARAÇÃO COMPLEMENTAR:',...(r.sauce||[]).map(x=>'• '+x));if(r.sauceMethod)lines.push(r.sauceMethod)}
  if(r.method)lines.push('','MODO DE PREPARAÇÃO:',r.method);
  if(r.notes)lines.push('','NOTAS IMPORTANTES:',r.notes);
  lines.push('','Quantidades proporcionais calculadas por volume. Confirma o rendimento real da tua receita.');
- const url='https://wa.me/?text='+encodeURIComponent(lines.join('\n'));
+ const url='https://wa.me/?text='+encodeURIComponent(lines.join('\\n'));
  window.open(url,'_blank','noopener,noreferrer');
 }
 $('shareWedding').onclick=shareWeddingRecipe;
