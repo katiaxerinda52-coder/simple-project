@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { Json } from "../integrations/supabase/types";
 import { supabase } from "../integrations/supabase/client";
@@ -242,15 +242,15 @@ export function AccessGate({ children }: { children: ReactNode }) {
   );
 }
 
-const screenStyle: React.CSSProperties = { minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, background: "#f4f0e9", color: "#29251f", fontFamily: "Arial, sans-serif" };
-const panelStyle: React.CSSProperties = { width: "min(100%, 440px)", padding: 32, borderRadius: 18, background: "#fffdf9", boxShadow: "0 18px 60px rgba(40,30,20,.12)" };
-const adminPanelStyle: React.CSSProperties = { width: "min(100%, 760px)", maxHeight: "90vh", overflowY: "auto", padding: 24, borderRadius: 18, background: "#fffdf9", color: "#29251f", boxShadow: "0 18px 60px rgba(40,30,20,.2)" };
-const overlayStyle: React.CSSProperties = { position: "fixed", inset: 0, zIndex: 60, background: "rgba(20,18,16,.65)", display: "grid", placeItems: "center", padding: 16 };
-const eyebrowStyle: React.CSSProperties = { color: "#8a6749", fontSize: 11, letterSpacing: 2, fontWeight: 700 };
-const mutedStyle: React.CSSProperties = { color: "#756e65", lineHeight: 1.55, fontSize: 14 };
-const labelStyle: React.CSSProperties = { display: "block", margin: "20px 0 8px", fontSize: 13, fontWeight: 700 };
-const inputStyle: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: "12px 14px", border: "1px solid #d9d0c5", borderRadius: 9, background: "#fff", color: "#29251f", margin: "8px 0 12px" };
-const buttonStyle: React.CSSProperties = { border: 0, borderRadius: 9, padding: "12px 16px", background: "#335b49", color: "#fff", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" };
-const smallButtonStyle: React.CSSProperties = { border: "1px solid #c8bba9", borderRadius: 8, padding: "9px 12px", background: "#fffdf9", color: "#29251f", fontWeight: 700, cursor: "pointer" };
-const userRowStyle: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, borderBottom: "1px solid #eee7df", padding: "9px 0", fontSize: 13 };
-const removeButtonStyle: React.CSSProperties = { border: "1px solid #d7b9b4", borderRadius: 7, padding: "6px 9px", background: "#fff7f5", color: "#8b3931", cursor: "pointer" };
+const screenStyle: CSSProperties = { minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, background: "#f4f0e9", color: "#29251f", fontFamily: "Arial, sans-serif" };
+const panelStyle: CSSProperties = { width: "min(100%, 440px)", padding: 32, borderRadius: 18, background: "#fffdf9", boxShadow: "0 18px 60px rgba(40,30,20,.12)" };
+const adminPanelStyle: CSSProperties = { width: "min(100%, 760px)", maxHeight: "90vh", overflowY: "auto", padding: 24, borderRadius: 18, background: "#fffdf9", color: "#29251f", boxShadow: "0 18px 60px rgba(40,30,20,.2)" };
+const overlayStyle: CSSProperties = { position: "fixed", inset: 0, zIndex: 60, background: "rgba(20,18,16,.65)", display: "grid", placeItems: "center", padding: 16 };
+const eyebrowStyle: CSSProperties = { color: "#8a6749", fontSize: 11, letterSpacing: 2, fontWeight: 700 };
+const mutedStyle: CSSProperties = { color: "#756e65", lineHeight: 1.55, fontSize: 14 };
+const labelStyle: CSSProperties = { display: "block", margin: "20px 0 8px", fontSize: 13, fontWeight: 700 };
+const inputStyle: CSSProperties = { width: "100%", boxSizing: "border-box", padding: "12px 14px", border: "1px solid #d9d0c5", borderRadius: 9, background: "#fff", color: "#29251f", margin: "8px 0 12px" };
+const buttonStyle: CSSProperties = { border: 0, borderRadius: 9, padding: "12px 16px", background: "#335b49", color: "#fff", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" };
+const smallButtonStyle: CSSProperties = { border: "1px solid #c8bba9", borderRadius: 8, padding: "9px 12px", background: "#fffdf9", color: "#29251f", fontWeight: 700, cursor: "pointer" };
+const userRowStyle: CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, borderBottom: "1px solid #eee7df", padding: "9px 0", fontSize: 13 };
+const removeButtonStyle: CSSProperties = { border: "1px solid #d7b9b4", borderRadius: 7, padding: "6px 9px", background: "#fff7f5", color: "#8b3931", cursor: "pointer" };
