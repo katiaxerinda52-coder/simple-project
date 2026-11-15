@@ -1,9 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { Json } from "../integrations/supabase/types";
-import { supabase } from "../integrations/supabase/client";
-
-type RecipeId = "alcohol" | "without-alcohol" | "black-beer";
+import { appSupabase, type RecipeId } from "../integrations/supabase/app-client";
 type AuthorizedUser = { email: string; role: "admin" | "user"; active: boolean; created_at: string };
 
 export function AccessGate({ children }: { children: ReactNode }) {
@@ -27,7 +25,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
     let mounted = true;
     let unsubscribe = () => {};
     try {
-      const auth = supabase.auth;
+      const auth = appSupabase.auth;
       auth.getSession().then(({ data, error }) => {
         if (!mounted) return;
         if (error) setConfigurationError(true);
@@ -67,14 +65,14 @@ export function AccessGate({ children }: { children: ReactNode }) {
     const verifyAccess = async () => {
       try {
         const [accessResult, adminResult] = await Promise.all([
-          supabase.rpc("is_app_authorized"),
-          supabase.rpc("is_app_admin"),
+          appSupabase.rpc("is_app_authorized"),
+          appSupabase.rpc("is_app_admin"),
         ]);
         if (!active) return;
         const canEnter = accessResult.data === true && !accessResult.error;
         setAuthorized(canEnter);
         setAdmin(adminResult.data === true && !adminResult.error);
-        if (!canEnter && !firstCheck) await supabase.auth.signOut();
+        if (!canEnter && !firstCheck) await appSupabase.auth.signOut();
       } catch {
         if (active) {
           setAuthorized(false);
@@ -99,7 +97,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
   }, [session]);
 
   const loadUsers = async () => {
-    const { data, error } = await supabase.from("authorized_users").select("email,role,active,created_at").order("email");
+    const { data, error } = await appSupabase.from("authorized_users").select("email,role,active,created_at").order("email");
     if (error) {
       setAdminMessage("Não foi possível carregar a lista de acessos.");
       return;
@@ -109,7 +107,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
 
   const loadRecipe = async (id: RecipeId) => {
     setRecipeId(id);
-    const { data, error } = await supabase.from("wedding_cake_recipes").select("recipe").eq("id", id).maybeSingle();
+    const { data, error } = await appSupabase.from("wedding_cake_recipes").select("recipe").eq("id", id).maybeSingle();
     if (error || !data) {
       setAdminMessage("Não foi possível carregar esta receita.");
       return;
@@ -132,7 +130,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
     }
     setBusy(true);
     setMessage("");
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await appSupabase.auth.signInWithOtp({
       email: cleanEmail,
       options: { emailRedirectTo: window.location.origin },
     });
@@ -148,7 +146,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
       setAdminMessage("Introduza um e-mail válido.");
       return;
     }
-    const { error } = await supabase.from("authorized_users").insert({ email: cleanEmail, role: "user", active: true });
+    const { error } = await appSupabase.from("authorized_users").insert({ email: cleanEmail, role: "user", active: true });
     if (error) {
       setAdminMessage(error.code === "23505" ? "Este e-mail já está registado." : "Não foi possível adicionar este e-mail.");
       return;
@@ -159,7 +157,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
   };
 
   const removeUser = async (userEmail: string) => {
-    const { error } = await supabase.from("authorized_users").delete().eq("email", userEmail).eq("role", "user");
+    const { error } = await appSupabase.from("authorized_users").delete().eq("email", userEmail).eq("role", "user");
     setAdminMessage(error ? "Não foi possível revogar este acesso." : "Acesso revogado.");
     if (!error) await loadUsers();
   };
@@ -176,7 +174,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
       setAdminMessage("A receita deve ser um objecto JSON e manter o identificador seleccionado.");
       return;
     }
-    const { error } = await supabase.from("wedding_cake_recipes").update({ recipe: parsed }).eq("id", recipeId);
+    const { error } = await appSupabase.from("wedding_cake_recipes").update({ recipe: parsed }).eq("id", recipeId);
     setAdminMessage(error ? "Não foi possível guardar a receita." : "Receita actualizada com sucesso.");
   };
 
@@ -212,7 +210,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
           <span style={eyebrowStyle}>ACESSO NÃO AUTORIZADO</span>
           <h1 style={{ fontSize: 25 }}>Este e-mail ainda não tem permissão.</h1>
           <p style={mutedStyle}>A sessão foi iniciada como {session.user.email ?? "utilizador"}. Peça à administradora para adicionar este endereço à lista de acesso.</p>
-          <button style={buttonStyle} onClick={() => void supabase.auth.signOut()}>Terminar sessão</button>
+          <button style={buttonStyle} onClick={() => void appSupabase.auth.signOut()}>Terminar sessão</button>
         </div>
       </div>
     );
@@ -223,7 +221,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
       {children}
       <div style={{ position: "fixed", right: 16, bottom: 16, zIndex: 50, display: "flex", gap: 8 }}>
         {admin && <button style={smallButtonStyle} onClick={() => setPanelOpen((open) => !open)}>{panelOpen ? "Fechar gestão" : "Gestão da aplicação"}</button>}
-        <button style={smallButtonStyle} onClick={() => void supabase.auth.signOut()}>Sair</button>
+        <button style={smallButtonStyle} onClick={() => void appSupabase.auth.signOut()}>Sair</button>
       </div>
       {admin && panelOpen && (
         <div style={overlayStyle}>

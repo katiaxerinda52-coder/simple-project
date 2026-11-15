@@ -28,3 +28,5 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+Application-specific database typings belong in `src/integrations/supabase/app-client.ts` when generated schema types do not include app tables; keep generated client and type files untouched.

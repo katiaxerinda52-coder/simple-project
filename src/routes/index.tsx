@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, CakeSlice, Check, ChevronDown, CircleHelp, FileDown, Layers3, Minus, Plus, Printer, Sparkles } from "lucide-react";
 import type { WeddingCakeRecipe } from "../data/wedding-cake-recipes";
-import { supabase } from "../integrations/supabase/client";
+import { appSupabase } from "../integrations/supabase/app-client";
 import { scaleRecipeByReferenceVolume } from "../data/recipe-scaling";
 
 export const Route = createFileRoute("/")({
@@ -39,7 +39,7 @@ function Index() {
   const [recipeLoadError, setRecipeLoadError] = useState(false);
   useEffect(() => {
     let active = true;
-    supabase.from("wedding_cake_recipes").select("id,recipe").then(({ data, error }) => {
+    appSupabase.from("wedding_cake_recipes").select("id,recipe").then(({ data, error }) => {
       if (!active) return;
       if (error || !data || data.length !== 3) {
         setRecipeLoadError(true);
@@ -51,12 +51,12 @@ function Index() {
         return;
       }
       setRecipes(mapped);
-    }).catch(() => {
+    }, () => {
       if (active) setRecipeLoadError(true);
     });
     return () => { active = false; };
   }, []);
-  const selectedDough = doughs.find((item) => item.id === dough) ?? doughs[1];
+  const selectedDough = doughs.find((item) => item.id === dough) ?? { id: "alcohol", name: "Massa de noiva com álcool", detail: "Receita tradicional" };
   const diameterOptions = useMemo(() => Array.from({ length: 26 }, (_, i) => i + 10), []);
   if (!recipes) {
     return <main className="app-shell"><section className="workspace"><div className="calculator-card"><h2>{recipeLoadError ? "Não foi possível carregar as receitas." : "A carregar as receitas protegidas…"}</h2><p>{recipeLoadError ? "Confirme se a migração de segurança foi aplicada no Supabase e tente novamente." : "Aguarde um momento."}</p></div></section></main>;
@@ -171,7 +171,7 @@ function Index() {
         {calculated && <section className="results-card">
           <div className="results-heading"><div><span className="section-kicker">RESULTADO</span><h3>Ficha de produção</h3></div><button className="print-button" onClick={() => window.print()}><Printer size={16} /> Imprimir / Guardar PDF</button></div>
           <div className="results-summary"><div><small>TIPO DE MASSA</small><strong>{selectedDough.name}</strong></div><div><small>CONFIGURAÇÃO</small><strong>{mode === "single" ? `${diameter} cm × ${height} cm` : `${floors.length} andares`}</strong></div><div><small>ESTADO DA RECEITA</small><strong className="pending-text">{scaledResult ? "Estimativa por volume" : "Em configuração"}</strong></div></div>
-          <div className="result-tabs">{[["ingredients","Ingredientes"],["distribution","Distribuição"],["method","Preparo"]].map(([id,label]) => <button key={id} className={activeTab === id ? "active" : ""} onClick={() => setActiveTab(id)}>{label}</button>)}</div>
+          <div className="result-tabs">{([ ["ingredients", "Ingredientes"], ["distribution", "Distribuição"], ["method", "Preparo"] ] as const).map(([id, label]) => <button key={id} className={activeTab === id ? "active" : ""} onClick={() => setActiveTab(id)}>{label}</button>)}</div>
           {scaledResult ? <div className="recipe-results">
             {activeTab === "ingredients" && <div className="ingredient-result">
               <div className="calculation-note"><strong>Quantidades calculadas para as formas seleccionadas</strong><span>Apresentamos apenas a receita já ajustada.</span></div>
