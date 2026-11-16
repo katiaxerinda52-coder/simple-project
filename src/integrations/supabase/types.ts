@@ -14,13 +14,52 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      authorized_users: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          role: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          role?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          role?: string
+        }
+        Relationships: []
+      }
+      wedding_cake_recipes: {
+        Row: {
+          id: string
+          recipe: Json
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          recipe: Json
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          recipe?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_app_admin: { Args: never; Returns: boolean }
+      is_app_authorized: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
