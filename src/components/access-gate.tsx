@@ -1,8 +1,10 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { Json } from "../integrations/supabase/types";
 import { appSupabase, type RecipeId } from "../integrations/supabase/app-client";
-type AuthorizedUser = { email: string; role: "admin" | "user"; active: boolean; created_at: string };
+
+type AuthorizedUser = { email: string; active: boolean; created_at: string };
+type AuthMode = "login" | "recovery" | "set-password";
 
 export function AccessGate({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -12,44 +14,44 @@ export function AccessGate({ children }: { children: ReactNode }) {
   const [authorized, setAuthorized] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [mode, setMode] = useState<AuthMode>("login");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [users, setUsers] = useState<AuthorizedUser[]>([]);
+  const [searchEmail, setSearchEmail] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [recipeId, setRecipeId] = useState<RecipeId>("alcohol");
   const [recipeJson, setRecipeJson] = useState("");
   const [adminMessage, setAdminMessage] = useState("");
+  const [adminBusy, setAdminBusy] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    let unsubscribe = () => {};
     try {
       const auth = appSupabase.auth;
       auth.getSession().then(({ data, error }) => {
         if (!mounted) return;
         if (error) setConfigurationError(true);
         setSession(data.session);
+        if (new URLSearchParams(window.location.search).has("set-password") ||
+            new URLSearchParams(window.location.search).has("reset-password")) setMode("set-password");
         setInitializing(false);
       }).catch(() => {
-        if (mounted) {
-          setConfigurationError(true);
-          setInitializing(false);
-        }
+        if (mounted) { setConfigurationError(true); setInitializing(false); }
       });
-      const { data: { subscription } } = auth.onAuthStateChange((_event, nextSession) => {
+      const { data: { subscription } } = auth.onAuthStateChange((event, nextSession) => {
         setSession(nextSession);
+        if (event === "PASSWORD_RECOVERY") setMode("set-password");
         setInitializing(false);
       });
-      unsubscribe = () => subscription.unsubscribe();
+      return () => { mounted = false; subscription.unsubscribe(); };
     } catch {
       setConfigurationError(true);
       setInitializing(false);
     }
-    return () => {
-      mounted = false;
-      unsubscribe();
-    };
   }, []);
 
   useEffect(() => {
@@ -66,25 +68,28 @@ export function AccessGate({ children }: { children: ReactNode }) {
       try {
         const [accessResult, adminResult] = await Promise.all([
           appSupabase.rpc("is_app_authorized"),
-          appSupabase.rpc("is_app_admin"),
+          appSupabase.rpc("is_admin"),
         ]);
         if (!active) return;
         const canEnter = accessResult.data === true && !accessResult.error;
         setAuthorized(canEnter);
         setAdmin(adminResult.data === true && !adminResult.error);
-        if (!canEnter && !firstCheck) await appSupabase.auth.signOut();
-      } catch {
-        if (active) {
-          setAuthorized(false);
-          setAdmin(false);
+        if (!canEnter) {
+          setPanelOpen(false);
+          if (!firstCheck) {
+            setMessage("O seu acesso foi revogado. Termine a sessão e contacte a administradora.");
+            await appSupabase.auth.signOut();
+          }
         }
+      } catch {
+        if (active) { setAuthorized(false); setAdmin(false); }
       } finally {
         if (active && firstCheck) setChecking(false);
         firstCheck = false;
       }
     };
     void verifyAccess();
-    const interval = window.setInterval(() => { void verifyAccess(); }, 60_000);
+    const interval = window.setInterval(() => void verifyAccess(), 30000);
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") void verifyAccess();
     };
@@ -96,22 +101,16 @@ export function AccessGate({ children }: { children: ReactNode }) {
     };
   }, [session]);
 
-  const loadUsers = async () => {
-    const { data, error } = await appSupabase.from("authorized_users").select("email,role,active,created_at").order("email");
-    if (error) {
-      setAdminMessage("Não foi possível carregar a lista de acessos.");
-      return;
-    }
+  const loadUsers = useCallback(async (term = searchEmail) => {
+    const { data, error } = await appSupabase.rpc("admin_list_authorized_users", { p_search: term.trim() || null });
+    if (error) { setAdminMessage("Não foi possível carregar a lista. Confirme se continua com acesso de administradora."); return; }
     setUsers(data ?? []);
-  };
+  }, [searchEmail]);
 
   const loadRecipe = async (id: RecipeId) => {
     setRecipeId(id);
     const { data, error } = await appSupabase.from("wedding_cake_recipes").select("recipe").eq("id", id).maybeSingle();
-    if (error || !data) {
-      setAdminMessage("Não foi possível carregar esta receita.");
-      return;
-    }
+    if (error || !data) { setAdminMessage("Não foi possível carregar esta receita."); return; }
     setRecipeJson(JSON.stringify(data.recipe, null, 2));
   };
 
@@ -120,161 +119,131 @@ export function AccessGate({ children }: { children: ReactNode }) {
       void loadUsers();
       void loadRecipe(recipeId);
     }
-  }, [admin, panelOpen]);
+  }, [admin, panelOpen, loadUsers]);
 
-  const signInWithGoogle = async () => {
-    setBusy(true);
-    setMessage("");
-    const { error } = await appSupabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
-    });
-    if (error) {
-      setBusy(false);
-      setMessage("Não foi possível iniciar a entrada com Google. Verifique se o fornecedor Google está activo na autenticação.");
-    }
+  const signIn = async () => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !password) { setMessage("Introduza o e-mail e a palavra-passe."); return; }
+    setBusy(true); setMessage("");
+    const { error } = await appSupabase.auth.signInWithPassword({ email: cleanEmail, password });
+    setBusy(false);
+    setMessage(error ? "Não foi possível entrar. Confirme o e-mail e a palavra-passe ou recupere o acesso." : "");
   };
 
-  const sendMagicLink = async () => {
+  const recoverPassword = async () => {
     const cleanEmail = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setMessage("Introduza um endereço de e-mail válido.");
-      return;
+      setMessage("Introduza primeiro um endereço de e-mail válido."); return;
     }
-    setBusy(true);
-    setMessage("");
-    const { error } = await appSupabase.auth.signInWithOtp({
-      email: cleanEmail,
-      options: { emailRedirectTo: window.location.origin },
+    setBusy(true); setMessage("");
+    const { error } = await appSupabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: window.location.origin + "/?reset-password=1",
     });
     setBusy(false);
     setMessage(error
-      ? "Não foi possível enviar o link. Confirme a configuração do e-mail e tente novamente."
-      : "Se este e-mail estiver autorizado, receberá um link de acesso. Verifique também o spam.");
+      ? "Não foi possível enviar o e-mail de recuperação. Tente novamente mais tarde."
+      : "Se existir uma conta com este endereço, receberá um e-mail para definir uma nova palavra-passe. Verifique também o spam.");
+  };
+
+  const setPassword = async () => {
+    if (newPassword.length < 8) { setMessage("A palavra-passe deve ter pelo menos 8 caracteres."); return; }
+    setBusy(true); setMessage("");
+    const { error } = await appSupabase.auth.updateUser({ password: newPassword });
+    setBusy(false);
+    if (error) { setMessage("Não foi possível guardar a palavra-passe. Abra novamente o link recebido por e-mail."); return; }
+    setPassword("");
+    setNewPassword("");
+    setMode("login");
+    window.history.replaceState({}, "", window.location.pathname);
+    setMessage("Palavra-passe definida com sucesso. Já pode entrar.");
+    await appSupabase.auth.signOut();
   };
 
   const addUser = async () => {
     const cleanEmail = newEmail.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setAdminMessage("Introduza um e-mail válido.");
-      return;
-    }
-    const { error } = await appSupabase.from("authorized_users").insert({ email: cleanEmail, role: "user", active: true });
-    if (error) {
-      setAdminMessage(error.code === "23505" ? "Este e-mail já está registado." : "Não foi possível adicionar este e-mail.");
-      return;
-    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) { setAdminMessage("Introduza um e-mail válido."); return; }
+    setAdminBusy(true); setAdminMessage("");
+    const { data: sessionData } = await appSupabase.auth.getSession();
+    const { data, error } = await appSupabase.functions.invoke("invite-authorized-user", {
+      body: { email: cleanEmail, redirectTo: window.location.origin + "/?set-password=1" },
+    });
+    setAdminBusy(false);
+    if (error || data?.error) { setAdminMessage(data?.error ?? "Não foi possível enviar o convite."); return; }
     setNewEmail("");
-    setAdminMessage("E-mail autorizado com sucesso.");
-    await loadUsers();
+    setAdminMessage(data?.message ?? "Convite enviado.");
+    await loadUsers("");
   };
 
   const removeUser = async (userEmail: string) => {
-    const { error } = await appSupabase.from("authorized_users").delete().eq("email", userEmail).eq("role", "user");
-    setAdminMessage(error ? "Não foi possível revogar este acesso." : "Acesso revogado.");
+    setAdminBusy(true);
+    const { error } = await appSupabase.rpc("admin_remove_authorized_user", { p_email: userEmail });
+    setAdminBusy(false);
+    setAdminMessage(error ? "Não foi possível revogar este acesso." : "Acesso revogado. A sessão será terminada na próxima verificação.");
     if (!error) await loadUsers();
   };
 
   const saveRecipe = async () => {
     let parsed: Json;
-    try {
-      parsed = JSON.parse(recipeJson) as Json;
-    } catch {
-      setAdminMessage("O conteúdo da receita não é um JSON válido. Corrija antes de guardar.");
-      return;
-    }
+    try { parsed = JSON.parse(recipeJson) as Json; }
+    catch { setAdminMessage("O conteúdo da receita não é um JSON válido. Corrija antes de guardar."); return; }
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || (parsed as { id?: unknown }).id !== recipeId) {
-      setAdminMessage("A receita deve ser um objecto JSON e manter o identificador seleccionado.");
-      return;
+      setAdminMessage("A receita deve ser um objecto JSON e manter o identificador seleccionado."); return;
     }
     const { error } = await appSupabase.from("wedding_cake_recipes").update({ recipe: parsed }).eq("id", recipeId);
     setAdminMessage(error ? "Não foi possível guardar a receita." : "Receita actualizada com sucesso.");
   };
 
-  if (configurationError) {
-    return <div style={screenStyle}><div style={panelStyle}><strong>Configuração de acesso incompleta</strong><p style={mutedStyle}>O Supabase ainda não está configurado nesta publicação. Verifique as variáveis de ligação e a configuração do projecto.</p></div></div>;
-  }
+  if (configurationError) return <div style={screenStyle}><div style={panelStyle}><strong>Configuração de acesso incompleta</strong><p style={mutedStyle}>Não foi possível ligar ao serviço de autenticação. Verifique a ligação do projecto no Lovable Cloud.</p></div></div>;
+  if (initializing || checking) return <div style={screenStyle}><div style={panelStyle}><strong>Massas de Noiva Pro</strong><p>A verificar o acesso seguro…</p></div></div>;
 
-  if (initializing || checking) {
-    return <div style={screenStyle}><div style={panelStyle}><strong>Massas de Noiva Pro</strong><p>A verificar o acesso seguro…</p></div></div>;
+  if (mode === "set-password") {
+    return <div style={screenStyle}><form style={panelStyle} onSubmit={(e) => { e.preventDefault(); void setPassword(); }}>
+      <span style={eyebrowStyle}>DEFINIR PALAVRA-PASSE</span><h1 style={{ margin: "10px 0", fontSize: 26 }}>Massas de Noiva Pro</h1>
+      <p style={mutedStyle}>Escolha uma palavra-passe com pelo menos 8 caracteres.</p>
+      <label style={labelStyle} htmlFor="new-password">Nova palavra-passe</label>
+      <input id="new-password" type="password" autoComplete="new-password" minLength={8} required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={inputStyle} />
+      <button disabled={busy} type="submit" style={{ ...buttonStyle, width: "100%" }}>{busy ? "A guardar…" : "Guardar palavra-passe"}</button>
+      {message && <p role="status" style={mutedStyle}>{message}</p>}
+    </form></div>;
   }
 
   if (!session) {
-    return (
-      <div style={screenStyle}>
-        <form style={panelStyle} onSubmit={(event) => { event.preventDefault(); void sendMagicLink(); }}>
-          <span style={eyebrowStyle}>ACESSO PRIVADO</span>
-          <h1 style={{ margin: "10px 0", fontSize: 26 }}>Massas de Noiva Pro</h1>
-          <p style={mutedStyle}>Entre com a conta Google autorizada ou receba um link seguro no seu e-mail.</p>
-          <button disabled={busy} type="button" style={{ ...buttonStyle, width: "100%", background: "#29251f", marginBottom: 10 }} onClick={() => void signInWithGoogle()}>
-            {busy ? "A aguardar…" : "Entrar com Google"}
-          </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "12px 0", color: "#756e65", fontSize: 12 }}>
-            <span style={{ height: 1, flex: 1, background: "#e5ddd3" }} /> OU POR E-MAIL <span style={{ height: 1, flex: 1, background: "#e5ddd3" }} />
-          </div>
-          <label style={labelStyle} htmlFor="access-email">E-mail autorizado</label>
-          <input id="access-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nome@exemplo.com" style={inputStyle} />
-          <button disabled={busy} type="submit" style={{ ...buttonStyle, width: "100%" }}>{busy ? "A enviar…" : "Enviar link de acesso por e-mail"}</button>
-          {message && <p role="status" style={mutedStyle}>{message}</p>}
-          <small style={mutedStyle}>Partilhar o endereço desta página não concede acesso às receitas nem à calculadora.</small>
-        </form>
-      </div>
-    );
+    return <div style={screenStyle}><form style={panelStyle} onSubmit={(e) => { e.preventDefault(); void (mode === "recovery" ? recoverPassword() : signIn()); }}>
+      <span style={eyebrowStyle}>ACESSO PRIVADO</span><h1 style={{ margin: "10px 0", fontSize: 26 }}>Massas de Noiva Pro</h1>
+      <p style={mutedStyle}>{mode === "recovery" ? "Indique o e-mail da sua conta para receber o link de recuperação." : "Entre com o e-mail e a palavra-passe definidos através do convite."}</p>
+      <label style={labelStyle} htmlFor="access-email">E-mail</label>
+      <input id="access-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nome@exemplo.com" style={inputStyle} />
+      {mode === "login" && <><label style={labelStyle} htmlFor="access-password">Palavra-passe</label><input id="access-password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} /></>}
+      <button disabled={busy} type="submit" style={{ ...buttonStyle, width: "100%" }}>{busy ? "A processar…" : mode === "recovery" ? "Enviar recuperação" : "Entrar"}</button>
+      <button disabled={busy} type="button" style={{ ...smallButtonStyle, width: "100%", marginTop: 10 }} onClick={() => { setMode(mode === "recovery" ? "login" : "recovery"); setMessage(""); }}>{mode === "recovery" ? "Voltar ao início de sessão" : "Esqueci-me da palavra-passe"}</button>
+      {message && <p role="status" style={mutedStyle}>{message}</p>}
+      <small style={mutedStyle}>O registo público está desactivado. Só entram endereços autorizados pela administradora.</small>
+    </form></div>;
   }
 
-  if (!authorized) {
-    return (
-      <div style={screenStyle}>
-        <div style={panelStyle}>
-          <span style={eyebrowStyle}>ACESSO NÃO AUTORIZADO</span>
-          <h1 style={{ fontSize: 25 }}>Este e-mail ainda não tem permissão.</h1>
-          <p style={mutedStyle}>A sessão foi iniciada como {session.user.email ?? "utilizador"}. Peça à administradora para adicionar este endereço à lista de acesso.</p>
-          <button style={buttonStyle} onClick={() => void appSupabase.auth.signOut()}>Terminar sessão</button>
-        </div>
-      </div>
-    );
-  }
+  if (!authorized) return <div style={screenStyle}><div style={panelStyle}><span style={eyebrowStyle}>ACESSO NÃO AUTORIZADO</span><h1 style={{ fontSize: 25 }}>Este e-mail ainda não tem permissão.</h1><p style={mutedStyle}>A conta {session.user.email ?? "iniciada"} não está autorizada. Peça à administradora para adicionar este endereço.</p><button style={buttonStyle} onClick={() => void appSupabase.auth.signOut()}>Terminar sessão</button></div></div>;
 
-  return (
-    <>
-      {children}
-      <div style={{ position: "fixed", top: 12, right: 12, left: 12, zIndex: 50, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8, flexWrap: "wrap", pointerEvents: "none" }}>
-        <span style={{ ...smallButtonStyle, maxWidth: "min(48vw, 320px)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", pointerEvents: "auto" }} title={session.user.email ?? "Conta activa"}>{session.user.email ?? "Conta activa"}</span>
-        {admin && <button style={{ ...smallButtonStyle, pointerEvents: "auto" }} onClick={() => setPanelOpen((open) => !open)}>{panelOpen ? "Fechar gestão" : "Gestão da aplicação"}</button>}
-        <button style={{ ...smallButtonStyle, pointerEvents: "auto" }} onClick={() => void appSupabase.auth.signOut()}>Sair / trocar conta</button>
-      </div>
-      {admin && panelOpen && (
-        <div style={overlayStyle}>
-          <section style={adminPanelStyle} aria-label="Painel de administração">
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-              <div><span style={eyebrowStyle}>ADMINISTRADORA</span><h2 style={{ margin: "6px 0 16px" }}>Gestão da aplicação</h2></div>
-              <button style={smallButtonStyle} onClick={() => setPanelOpen(false)}>Fechar</button>
-            </div>
-            <h3>Utilizadoras autorizadas</h3>
-            <p style={mutedStyle}>Adicione apenas os e-mails que devem entrar. Remover um e-mail revoga o acesso nas próximas verificações.</p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} placeholder="email@exemplo.com" style={{ ...inputStyle, margin: 0 }} />
-              <button style={buttonStyle} onClick={() => void addUser()}>Adicionar</button>
-            </div>
-            <div style={{ maxHeight: 160, overflowY: "auto", margin: "12px 0 20px" }}>
-              {users.map((user) => <div key={user.email} style={userRowStyle}><span>{user.email}{user.role === "admin" ? " · Administradora" : ""}</span>{user.role !== "admin" && <button style={removeButtonStyle} onClick={() => void removeUser(user.email)}>Revogar</button>}</div>)}
-            </div>
-            <hr style={{ borderColor: "#e8e0d8", margin: "16px 0" }} />
-            <h3>Receitas originais</h3>
-            <p style={mutedStyle}>Apenas a administradora pode alterar ingredientes, quantidades, preparação e notas. Guarde o conteúdo completo da receita.</p>
-            <select value={recipeId} onChange={(event) => void loadRecipe(event.target.value as RecipeId)} style={inputStyle}>
-              <option value="alcohol">Massa de noiva com álcool</option>
-              <option value="without-alcohol">Massa de noiva sem álcool</option>
-              <option value="black-beer">Massa de noiva com cerveja preta</option>
-            </select>
-            <textarea value={recipeJson} onChange={(event) => setRecipeJson(event.target.value)} rows={12} spellCheck={false} style={{ ...inputStyle, fontFamily: "monospace", fontSize: 12 }} />
-            <button style={buttonStyle} onClick={() => void saveRecipe()}>Guardar receita original</button>
-            {adminMessage && <p role="status" style={mutedStyle}>{adminMessage}</p>}
-          </section>
-        </div>
-      )}
-    </>
-  );
+  return <>
+    {children}
+    <div style={{ position: "fixed", top: 12, right: 12, left: 12, zIndex: 50, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8, flexWrap: "wrap", pointerEvents: "none" }}>
+      <span style={{ ...smallButtonStyle, maxWidth: "min(48vw, 320px)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", pointerEvents: "auto" }} title={session.user.email ?? "Conta activa"}>{session.user.email ?? "Conta activa"}</span>
+      {admin && <button style={{ ...smallButtonStyle, pointerEvents: "auto" }} onClick={() => setPanelOpen((open) => !open)}>{panelOpen ? "Fechar gestão" : "Gestão da aplicação"}</button>}
+      <button style={{ ...smallButtonStyle, pointerEvents: "auto" }} onClick={() => void appSupabase.auth.signOut()}>Sair / trocar conta</button>
+    </div>
+    {admin && panelOpen && <div style={overlayStyle}><section style={adminPanelStyle} aria-label="Painel de administração">
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}><div><span style={eyebrowStyle}>ADMINISTRADORA</span><h2 style={{ margin: "6px 0 16px" }}>Gestão da aplicação</h2></div><button style={smallButtonStyle} onClick={() => setPanelOpen(false)}>Fechar</button></div>
+      <h3>Utilizadoras autorizadas</h3><p style={mutedStyle}>Adicione um e-mail para enviar um convite de definição de palavra-passe. A revogação bloqueia as próximas operações protegidas.</p>
+      <div style={{ display: "flex", gap: 8 }}><input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="email@exemplo.com" style={{ ...inputStyle, margin: 0 }} /><button disabled={adminBusy} style={buttonStyle} onClick={() => void addUser()}>{adminBusy ? "A enviar…" : "Convidar"}</button></div>
+      <label style={labelStyle} htmlFor="search-authorized">Pesquisar e-mail</label><input id="search-authorized" type="search" value={searchEmail} onChange={(e) => { setSearchEmail(e.target.value); void loadUsers(e.target.value); }} placeholder="Pesquisar na lista…" style={inputStyle} />
+      <div style={{ maxHeight: 160, overflowY: "auto", margin: "12px 0 20px" }}>{users.map((user) => <div key={user.email} style={userRowStyle}><span>{user.email}{!user.active ? " · Revogado" : ""}</span>{user.active && <button disabled={adminBusy} style={removeButtonStyle} onClick={() => void removeUser(user.email)}>Revogar</button>}</div>)}</div>
+      <hr style={{ borderColor: "#e8e0d8", margin: "16px 0" }} />
+      <h3>Receitas originais</h3><p style={mutedStyle}>Apenas a administradora pode alterar ingredientes, quantidades, preparação e notas.</p>
+      <select value={recipeId} onChange={(e) => void loadRecipe(e.target.value as RecipeId)} style={inputStyle}><option value="alcohol">Massa de noiva com álcool</option><option value="without-alcohol">Massa de noiva sem álcool</option><option value="black-beer">Massa de noiva com cerveja preta</option></select>
+      <textarea value={recipeJson} onChange={(e) => setRecipeJson(e.target.value)} rows={12} spellCheck={false} style={{ ...inputStyle, fontFamily: "monospace", fontSize: 12 }} />
+      <button style={buttonStyle} onClick={() => void saveRecipe()}>Guardar receita original</button>
+      {adminMessage && <p role="status" style={mutedStyle}>{adminMessage}</p>}
+    </section></div>}
+  </>;
 }
 
 const screenStyle: CSSProperties = { minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, background: "#f4f0e9", color: "#29251f", fontFamily: "Arial, sans-serif" };
