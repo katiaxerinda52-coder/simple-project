@@ -14,7 +14,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
   const [authorized, setAuthorized] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setLoginPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [mode, setMode] = useState<AuthMode>("login");
   const [message, setMessage] = useState("");
@@ -211,7 +211,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
       <p style={mutedStyle}>{mode === "recovery" ? "Indique o e-mail da sua conta para receber o link de recuperação." : "Entre com o e-mail e a palavra-passe definidos através do convite."}</p>
       <label style={labelStyle} htmlFor="access-email">E-mail</label>
       <input id="access-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nome@exemplo.com" style={inputStyle} />
-      {mode === "login" && <><label style={labelStyle} htmlFor="access-password">Palavra-passe</label><input id="access-password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} /></>}
+      {mode === "login" && <><label style={labelStyle} htmlFor="access-password">Palavra-passe</label><input id="access-password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setLoginPassword(e.target.value)} style={inputStyle} /></>}
       <button disabled={busy} type="submit" style={{ ...buttonStyle, width: "100%" }}>{busy ? "A processar…" : mode === "recovery" ? "Enviar recuperação" : "Entrar"}</button>
       <button disabled={busy} type="button" style={{ ...smallButtonStyle, width: "100%", marginTop: 10 }} onClick={() => { setMode(mode === "recovery" ? "login" : "recovery"); setMessage(""); }}>{mode === "recovery" ? "Voltar ao início de sessão" : "Esqueci-me da palavra-passe"}</button>
       {message && <p role="status" style={mutedStyle}>{message}</p>}
