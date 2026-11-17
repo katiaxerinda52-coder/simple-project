@@ -68,7 +68,7 @@ Deno.serve(async (req: Request) => {
 
   if (inviteError) {
     // The address remains authorized. Existing accounts can use "Recuperar palavra-passe".
-    const alreadyExists = /already|registered|exists|user/i.test(inviteError.message);
+    const alreadyExists = /already (?:been )?(?:registered|invited)|already exists|user already registered/i.test(inviteError.message);
     if (alreadyExists) {
       return json({
         ok: true,
@@ -76,8 +76,7 @@ Deno.serve(async (req: Request) => {
         message: "E-mail autorizado. Esta pessoa já tem conta; deve usar «Esqueci-me da palavra-passe» para definir uma palavra-passe.",
       });
     }
-    await caller.rpc("admin_remove_authorized_user", { p_email: email });
-    return json({ error: "Não foi possível enviar o convite. Confirme a configuração de e-mail do Supabase." }, 502);
+    return json({ error: "O e-mail ficou autorizado, mas o convite não foi enviado. Confirme a configuração de e-mail e tente novamente." }, 502);
   }
 
   return json({ ok: true, invited: true, message: "Convite enviado. A pessoa deve abrir o e-mail e definir a palavra-passe." });
