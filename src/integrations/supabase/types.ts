@@ -19,13 +19,11 @@ export type Database = {
           active: boolean
           created_at: string
           email: string
-          role: string
         }
         Insert: {
           active?: boolean
           created_at?: string
           email: string
-          role?: string
         }
         Update: {
           active?: boolean
@@ -58,8 +56,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_admin: { Args: never; Returns: boolean }
       is_app_admin: { Args: never; Returns: boolean }
       is_app_authorized: { Args: never; Returns: boolean }
+      admin_list_authorized_users: {
+        Args: { p_search?: string | null }
+        Returns: { email: string; active: boolean; created_at: string }[]
+      }
+      admin_add_authorized_user: { Args: { p_email: string }; Returns: boolean }
+      admin_remove_authorized_user: { Args: { p_email: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
