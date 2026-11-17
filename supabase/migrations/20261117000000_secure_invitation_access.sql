@@ -14,14 +14,16 @@ create table if not exists public.user_roles (
 alter table public.user_roles enable row level security;
 revoke all on public.user_roles from public, anon, authenticated;
 
+-- Remove old policies first because the original write policy references the legacy role column.
+alter table public.authorized_users enable row level security;
+drop policy if exists "Admins manage authorized users" on public.authorized_users;
+drop policy if exists "Admin reads authorized users" on public.authorized_users;
+
 -- Remove the old email-based role mechanism without deleting allowlist rows.
 alter table public.authorized_users drop constraint if exists only_owner_can_be_admin;
 alter table public.authorized_users drop column if exists role;
 
 -- No client can read/write the allowlist directly. All operations use checked RPCs.
-alter table public.authorized_users enable row level security;
-drop policy if exists "Admins manage authorized users" on public.authorized_users;
-drop policy if exists "Admin reads authorized users" on public.authorized_users;
 revoke all on public.authorized_users from public, anon, authenticated;
 
 create or replace function public.is_admin()
