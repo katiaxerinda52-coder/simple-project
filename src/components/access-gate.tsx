@@ -122,6 +122,19 @@ export function AccessGate({ children }: { children: ReactNode }) {
     }
   }, [admin, panelOpen]);
 
+  const signInWithGoogle = async () => {
+    setBusy(true);
+    setMessage("");
+    const { error } = await appSupabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) {
+      setBusy(false);
+      setMessage("Não foi possível iniciar a entrada com Google. Verifique se o fornecedor Google está activo na autenticação.");
+    }
+  };
+
   const sendMagicLink = async () => {
     const cleanEmail = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
@@ -192,10 +205,16 @@ export function AccessGate({ children }: { children: ReactNode }) {
         <form style={panelStyle} onSubmit={(event) => { event.preventDefault(); void sendMagicLink(); }}>
           <span style={eyebrowStyle}>ACESSO PRIVADO</span>
           <h1 style={{ margin: "10px 0", fontSize: 26 }}>Massas de Noiva Pro</h1>
-          <p style={mutedStyle}>Introduza o e-mail que foi autorizado pela administradora. Enviaremos um link seguro para entrar, sem palavra-passe.</p>
+          <p style={mutedStyle}>Entre com a conta Google autorizada ou receba um link seguro no seu e-mail.</p>
+          <button disabled={busy} type="button" style={{ ...buttonStyle, width: "100%", background: "#29251f", marginBottom: 10 }} onClick={() => void signInWithGoogle()}>
+            {busy ? "A aguardar…" : "Entrar com Google"}
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "12px 0", color: "#756e65", fontSize: 12 }}>
+            <span style={{ height: 1, flex: 1, background: "#e5ddd3" }} /> OU POR E-MAIL <span style={{ height: 1, flex: 1, background: "#e5ddd3" }} />
+          </div>
           <label style={labelStyle} htmlFor="access-email">E-mail autorizado</label>
           <input id="access-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nome@exemplo.com" style={inputStyle} />
-          <button disabled={busy} type="submit" style={buttonStyle}>{busy ? "A enviar…" : "Enviar link de acesso"}</button>
+          <button disabled={busy} type="submit" style={{ ...buttonStyle, width: "100%" }}>{busy ? "A enviar…" : "Enviar link de acesso por e-mail"}</button>
           {message && <p role="status" style={mutedStyle}>{message}</p>}
           <small style={mutedStyle}>Partilhar o endereço desta página não concede acesso às receitas nem à calculadora.</small>
         </form>
@@ -219,9 +238,10 @@ export function AccessGate({ children }: { children: ReactNode }) {
   return (
     <>
       {children}
-      <div style={{ position: "fixed", right: 16, bottom: 16, zIndex: 50, display: "flex", gap: 8 }}>
-        {admin && <button style={smallButtonStyle} onClick={() => setPanelOpen((open) => !open)}>{panelOpen ? "Fechar gestão" : "Gestão da aplicação"}</button>}
-        <button style={smallButtonStyle} onClick={() => void appSupabase.auth.signOut()}>Sair</button>
+      <div style={{ position: "fixed", top: 12, right: 12, left: 12, zIndex: 50, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8, flexWrap: "wrap", pointerEvents: "none" }}>
+        <span style={{ ...smallButtonStyle, maxWidth: "min(48vw, 320px)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", pointerEvents: "auto" }} title={session.user.email ?? "Conta activa"}>{session.user.email ?? "Conta activa"}</span>
+        {admin && <button style={{ ...smallButtonStyle, pointerEvents: "auto" }} onClick={() => setPanelOpen((open) => !open)}>{panelOpen ? "Fechar gestão" : "Gestão da aplicação"}</button>}
+        <button style={{ ...smallButtonStyle, pointerEvents: "auto" }} onClick={() => void appSupabase.auth.signOut()}>Sair / trocar conta</button>
       </div>
       {admin && panelOpen && (
         <div style={overlayStyle}>
