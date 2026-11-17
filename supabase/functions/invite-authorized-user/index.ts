@@ -19,8 +19,11 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "Método não permitido." }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const publishableKeysRaw = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS");
+  const publishableKeys = publishableKeysRaw ? JSON.parse(publishableKeysRaw) : {};
+  const anonKey = publishableKeys.default ?? Deno.env.get("SUPABASE_ANON_KEY");
+  // This secret is configured only in the backend Edge Function Secrets panel.
+  const serviceRoleKey = Deno.env.get("APP_SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !anonKey || !serviceRoleKey) {
     return json({ error: "Configuração do servidor incompleta." }, 500);
   }
