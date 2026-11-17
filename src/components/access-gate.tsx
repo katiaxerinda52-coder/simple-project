@@ -151,7 +151,6 @@ export function AccessGate({ children }: { children: ReactNode }) {
     const { error } = await appSupabase.auth.updateUser({ password: newPassword });
     setBusy(false);
     if (error) { setMessage("Não foi possível guardar a palavra-passe. Abra novamente o link recebido por e-mail."); return; }
-    setPassword("");
     setNewPassword("");
     setMode("login");
     window.history.replaceState({}, "", window.location.pathname);
@@ -163,7 +162,6 @@ export function AccessGate({ children }: { children: ReactNode }) {
     const cleanEmail = newEmail.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) { setAdminMessage("Introduza um e-mail válido."); return; }
     setAdminBusy(true); setAdminMessage("");
-    const { data: sessionData } = await appSupabase.auth.getSession();
     const { data, error } = await appSupabase.functions.invoke("invite-authorized-user", {
       body: { email: cleanEmail, redirectTo: window.location.origin + "/?set-password=1" },
     });
