@@ -29,7 +29,24 @@ export type Database = {
           active?: boolean
           created_at?: string
           email?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
           role?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -56,15 +73,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_add_authorized_user: { Args: { p_email: string }; Returns: boolean }
+      admin_list_authorized_users: {
+        Args: { p_search?: string }
+        Returns: {
+          active: boolean
+          created_at: string
+          email: string
+        }[]
+      }
+      admin_remove_authorized_user: {
+        Args: { p_email: string }
+        Returns: boolean
+      }
       is_admin: { Args: never; Returns: boolean }
       is_app_admin: { Args: never; Returns: boolean }
       is_app_authorized: { Args: never; Returns: boolean }
-      admin_list_authorized_users: {
-        Args: { p_search?: string | null }
-        Returns: { email: string; active: boolean; created_at: string }[]
-      }
-      admin_add_authorized_user: { Args: { p_email: string }; Returns: boolean }
-      admin_remove_authorized_user: { Args: { p_email: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
