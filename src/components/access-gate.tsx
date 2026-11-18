@@ -30,6 +30,7 @@ export function AccessGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let unsubscribe = () => {};
     try {
       const auth = appSupabase.auth;
       auth.getSession().then(({ data, error }) => {
@@ -47,11 +48,15 @@ export function AccessGate({ children }: { children: ReactNode }) {
         if (event === "PASSWORD_RECOVERY") setMode("set-password");
         setInitializing(false);
       });
-      return () => { mounted = false; subscription.unsubscribe(); };
+      unsubscribe = () => subscription.unsubscribe();
     } catch {
       setConfigurationError(true);
       setInitializing(false);
     }
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
